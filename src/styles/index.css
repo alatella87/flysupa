@@ -16,7 +16,27 @@
 	min-height: 300px !important;
 }
 
+input:-webkit-autofill, 
+input:-internal-autofill-selected {
+    background-color: white !important;
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+    box-shadow: 0 0 0px 1000px white inset !important;
+}
 
+/* Add this CSS to your global stylesheet */
+
+::selection {
+  background-color: white; /* Light grey background color */
+  color: #000; /* Text color when highlighted */
+}
+
+/* For better cross-browser compatibility */
+
+::-moz-selection {
+  background-color: white; /* Light grey background color */
+  color: #000; /* Text color when highlighted */
+}
 
 @layer base {
   :root {
@@ -74,8 +94,6 @@
 	}
 }
 
-
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -83,4 +101,8 @@
   body {
     @apply bg-background text-foreground;
 	}
+}
+
+:root {
+	background-color: white !important;
 }

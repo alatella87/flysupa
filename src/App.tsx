@@ -6,13 +6,14 @@ import AuthRedirect from "./components/AuthRedirect";
 import Navbar from "./components/Navbar";
 
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Check from "./pages/Check";
+import Login from "./pages/Auth/Login";
+import Check from "./pages/Auth/Check";
 import Users from "./pages/Users";
 import Account from "./pages/Account";
-import Register from "./pages/Register";
+import Register from "./pages/Auth/Register";
 import UserEdit from "./pages/UserEdit";
-import ConfirmRegistration from "./pages/ConfirmRegistration";
+import ConfirmRegistration from "./pages/Auth/ConfirmRegistration";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   
@@ -26,13 +27,15 @@ function App() {
     loadFlyonui();
   }, [location.pathname]);
 
-  return (<UserProvider>
+  return (
+    <UserProvider>
       <AuthRedirect/>
-      <div className="min-h-screen bg-base-200/60">
-        <Navbar/>
-        <div className="p-6">
+      <div className="min-h-screen bg-background">
+        {location.pathname !== "/login" && <Navbar/>}
+        <div className="p-4 md:p-6">
           <Routes>
             <Route path="/" element={<Home/>}/>
+            <Route path="/home" element={<Dashboard/>}/>
             <Route path="/login" element={<Login/>}/>
             <Route path="/users" element={<Users/>}/>
             <Route path="/user-edit/:id" element={<UserEdit />} />
@@ -43,7 +46,8 @@ function App() {
           </Routes>
         </div>
       </div>
-    </UserProvider>);
+    </UserProvider>
+  );
 }
 
 export default App;

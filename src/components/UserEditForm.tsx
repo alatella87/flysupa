@@ -3,164 +3,213 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../services/supabaseClient.tsx";
-import Avatar from "./Avatar.tsx";
-import { DataGrid, GridColDef, GridCellEditCommitParams } from "@mui/x-data-grid";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { styled } from "@mui/system";
 
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-});
-
-const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
-  border: 0,
-  "& .MuiDataGrid-cell": {
-    fontSize: "16px",
-  },
-  "& .MuiDataGrid-columnHeader": {
-    backgroundColor: "#2c2b31",
-  },
-}));
+// Shadcn Components
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "./ui/badge.tsx";
 
 interface ProfileData {
   id: string;
-  full_name: string;
+  nome_utente: string;
   email: string;
-  amount_hours: number;
+  total_hours: number;
   admin: boolean;
   sensibilizzazione?: boolean;
   soccorritori?: boolean;
   phone?: string;
   licenza_date?: string;
   full_avatar_url?: string;
-  [key: string]: any; // Allow for dynamic field access
+  avatar_url?: string;
 }
 
-export default function UserEdit() {
-  const { id } = useParams(); // Get user ID from URL
+interface Lesson {
+  id: string;
+  date: string;
+  amount_hours: number;
+  created_at: string;
+  content: string;
+  profile_id: string;
+  title: string;
+}
+
+const LoadingLessons = () => (
+  <div className="text-center py-4">Caricamento lezioni...</div>
+);
+
+const LessonsTable = ({
+  id,
+  profile,
+  lessons,
+  createLesson,
+  deleteLesson,
+}: {
+  id: any;
+  profile: ProfileData | null;
+  lessons: Lesson[];
+  createLesson: (id: string) => void;
+  deleteLesson: (id: string, profileId: any) => void,
+}) => (
+  <Table>
+    <TableCaption>Lezioni registrate per {profile?.nome_utente}</TableCaption>
+    <TableHeader>
+      <TableRow>
+        <TableHead>
+          <Badge variant={"outline"}>#</Badge>
+        </TableHead>
+        <TableHead>Data</TableHead>
+        <TableHead>Titolo</TableHead>
+        <TableHead>Descrizione</TableHead>
+        <TableHead>Ore</TableHead>
+        <TableHead>Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {lessons && lessons.length > 0 ? (
+        lessons.map((lesson) => (
+          <TableRow key={lesson.id}>
+            <TableCell>
+              <Badge variant={"secondary"}>{lesson.id}</Badge>
+            </TableCell>
+            <TableCell>
+              {new Date(lesson.created_at).toLocaleString("default", {
+                day: "2-digit",
+                month: "short",
+                year: "2-digit",
+              })}
+            </TableCell>
+            <TableCell>{lesson.title}</TableCell>
+            <TableCell>
+              {lesson.content && lesson.content.length > 50
+                ? `${lesson.content.substring(0, 50)}...`
+                : lesson.content}
+            </TableCell>
+            <TableCell>{lesson.amount_hours}</TableCell>
+            <TableCell>
+              <div className="text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mr-2"
+                  onClick={() => alert("test")}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => deleteLesson(lesson?.id, profile?.id)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  </svg>
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))
+      ) : (
+        <TableRow>
+          <TableCell colSpan={5} className="text-center">
+            Nessuna lezione disponibile
+          </TableCell>
+        </TableRow>
+      )}
+      <Button
+        onClick={() => createLesson(id)}
+        className="m-2 p-2"
+        size={"sm"}
+        variant={"secondary"}>
+        Aggiungi Lezione
+      </Button>
+    </TableBody>
+  </Table>
+);
+
+const NoLessons = ({
+  profile,
+  lessons,
+  createLesson,
+  id,
+}: {
+  profile: ProfileData | null;
+  lessons: any,
+  createLesson: (id: string) => void;
+  id: string;
+}) => (
+  <div className="text-left py-4 text-muted-foreground">
+    <Button
+      onClick={() => createLesson(id as any)}
+      className="p-2"
+      size={"sm"}
+      variant={"secondary"}>
+      Aggiungi Lezione
+    </Button>
+  </div>
+);
+
+export default function UserEditForm() {
+  const { id } = useParams<{ id: string }>(); // Get user ID from URL
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showConfirmAlert, setShowConfirmAlert] = useState(false);
   const [error, setError] = useState("");
+  const [lessons, setLessons] = useState([]); // Initialize as an empty array
+  const [loadingLessons, setLoadingLessons] = useState(true); // Initialize as true
+  const [totalHours, setTotalHours] = useState<number>(); // Initialize as true
 
-  // Define the columns for our editable table
-  const columns: GridColDef[] = [
-    {
-      field: 'field',
-      headerName: 'Campo',
-      flex: 1,
-      editable: false,
-    },
-    {
-      field: 'value',
-      headerName: 'Valore',
-      flex: 2,
-      editable: true,
-      renderCell: (params) => {
-        const row = rows.find(r => r.id === params.row.id);
-        
-        if (!row) return params.value;
-        
-        // Handle different types of values with appropriate rendering
-        if (row.type === 'boolean') {
-          return (
-            <div className="flex items-center justify-center w-full">
-              <input
-                type="checkbox"
-                className="toggle toggle-primary"
-                checked={params.value}
-                onChange={(e) => {
-                  const newValue = e.target.checked;
-                  handleManualEdit(params.row.id, newValue);
-                }}
-              />
-            </div>
-          );
-        } else if (row.key === 'amount_hours') {
-          return (
-            <div className="w-full">
-              <input
-                type="number"
-                min="0"
-                step="1"
-                className="input input-sm w-full"
-                value={params.value}
-                onChange={(e) => {
-                  const newValue = Number(e.target.value);
-                  handleManualEdit(params.row.id, newValue);
-                }}
-              />
-            </div>
-          );
-        } else if (row.key === 'email') {
-          return (
-            <div className="text-gray-500">
-              {params.value}
-            </div>
-          );
-        } else if (row.key === 'phone') {
-          return (
-            <div className="w-full">
-              <input
-                type="tel"
-                className="input input-sm w-full"
-                value={params.value || ''}
-                onChange={(e) => {
-                  handleManualEdit(params.row.id, e.target.value);
-                }}
-                placeholder="+41 XX XXX XX XX"
-              />
-            </div>
-          );
-        } else if (row.key === 'licenza_date') {
-          return (
-            <div className="w-full">
-              <input
-                type="date"
-                className="input input-sm w-full"
-                value={params.value ? params.value.split('T')[0] : ''}
-                onChange={(e) => {
-                  handleManualEdit(params.row.id, e.target.value);
-                }}
-              />
-            </div>
-          );
-        } else if (row.key === 'full_name') {
-          return (
-            <div className="w-full">
-              <input
-                type="text"
-                className="input input-sm w-full"
-                value={params.value || ''}
-                onChange={(e) => {
-                  handleManualEdit(params.row.id, e.target.value);
-                }}
-              />
-            </div>
-          );
-        }
-        
-        return params.value;
-      }
-    }
-  ];
-  
   // Profile fields that we want to display in our table
-  const fieldDisplayNames: {[key: string]: string} = {
-    full_name: 'Nome Completo',
-    email: 'Email',
-    phone: 'Telefono',
-    amount_hours: 'Totale Ore',
-    licenza_date: 'Data rilascio LAC',
-    admin: 'Amministratore',
-    sensibilizzazione: 'Sensibilizzazione',
-    soccorritori: 'Soccorritori'
+  const fieldDisplayNames: { [key: string]: string } = {
+    nome_utente: "Nome Completo",
+    email: "Email",
+    phone: "Telefono",
+    total_hours: "Totale Ore",
+    licenza_date: "Data rilascio LAC",
+    admin: "Amministratore",
+    sensibilizzazione: "Sensibilizzazione",
+    soccorritori: "Soccorritori",
   };
-  
-  const [rows, setRows] = useState<Array<{id: number, field: string, value: any, type: string}>>([]);
 
   const downloadAndSetAvatar = async (path: string) => {
     try {
@@ -178,103 +227,118 @@ export default function UserEdit() {
     }
   };
 
+  // Use Effects
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!id) {
-        setError("Invalid User Id");
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `${
-            import.meta.env.VITE_SUPABASE_URL
-          }/rest/v1/profiles_view?id=eq.${id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch profile");
-        }
-
-        const data = await response.json();
-
-        if (data.length > 0) {
-          const profileData = data[0];
-          
-          // Download and set avatar if available
-          if (profileData.avatar_url) {
-            const avatarUrl = await downloadAndSetAvatar(profileData.avatar_url);
-            profileData.full_avatar_url = avatarUrl;
-          }
-          
-          setProfile(profileData);
-          
-          // Convert profile data to rows for DataGrid
-          const profileRows = Object.entries(fieldDisplayNames)
-            .filter(([key]) => key in profileData)
-            .map(([key, displayName], index) => ({
-              id: index,
-              field: displayName,
-              value: profileData[key],
-              type: typeof profileData[key],
-              key: key // Keep original key for later use
-            }));
-            
-          setRows(profileRows);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    if (!id) return;
     fetchProfile();
   }, [id]);
 
-  const handleCellEditCommit = (params: GridCellEditCommitParams) => {
-    const rowId = params.id;
-    const newValue = params.value;
-    updateRowValue(rowId, newValue);
-  };
-  
-  // Handle manual edits from custom edit components (checkbox, number inputs)
-  const handleManualEdit = (rowId: number, newValue: any) => {
-    updateRowValue(rowId, newValue);
-  };
-  
-  // Shared function to update a row's value with proper type conversion
-  const updateRowValue = (rowId: any, newValue: any) => {
-    setRows(prevRows => {
-      const updatedRows = [...prevRows];
-      const rowIndex = updatedRows.findIndex(row => row.id === rowId);
-      
-      if (rowIndex !== -1) {
-        const row = updatedRows[rowIndex];
-        // Convert value to the correct type based on the original type
-        let typedValue = newValue;
-        
-        if (row.type === 'number') {
-          typedValue = Number(newValue);
-        } else if (row.type === 'boolean') {
-          typedValue = Boolean(newValue);
+  useEffect(() => {
+    if (!id) return;
+    fetchProfileLessons(id);
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const hours = lessons?.reduce((total, lesson) => total + lesson.amount_hours, 0);
+    setTotalHours(hours)
+  }, [lessons]);
+
+  // Fetch Profile
+  const fetchProfile = async () => {
+    if (!id) {
+      setError("Invalid User Id");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_SUPABASE_URL
+        }/rest/v1/profiles_view?id=eq.${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
         }
-        
-        updatedRows[rowIndex] = {
-          ...row,
-          value: typedValue
-        };
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
       }
-      
-      return updatedRows;
+
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const profileData = data[0];
+
+        // Download and set avatar if available
+        if (profileData.avatar_url) {
+          const avatarUrl = await downloadAndSetAvatar(profileData.avatar_url);
+          profileData.full_avatar_url = avatarUrl;
+        }
+        setProfile(profileData);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch Lessons
+  const fetchProfileLessons = async (id: string) => {
+    try {
+      setLoadingLessons(true);
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_SUPABASE_URL
+        }/rest/v1/lessons?profile_id=eq.${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch lessons");
+      }
+
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const lessonsData = data;
+        setLessons(lessonsData);
+        console.log("data", lessonsData);
+      } else {
+        setLessons([]);
+      }
+    } catch (err) {
+      console.error("Error fetching lessons:", err);
+    } finally {
+      setLoadingLessons(false);
+    }
+  };
+
+  
+  const calculateTotalHours = (lessons: Lesson[]) => {
+    const hours = lessons.reduce((total, lesson) => total + lesson.amount_hours, 0);
+    setTotalHours(hours)
+  };
+
+  // Handle edits from custom edit components
+  const handleFieldChange = (key: string, value: any) => {
+    // Update the profile state
+    setProfile((prev) => {
+      if (!prev) return null;
+      return { ...prev, [key]: value };
     });
   };
 
@@ -283,27 +347,26 @@ export default function UserEdit() {
 
     try {
       setLoading(true);
-      
-      // Convert rows back to an object for the API call
-      const updates = rows.reduce((acc, row) => {
-        // Skip email field which is readonly
-        if (row.key !== 'email') {
+
+      // Extract updatable fields from profile
+      const updates = Object.entries(profile)
+        .filter(([key]) => key !== "email" && key in fieldDisplayNames)
+        .reduce((acc, [key, value]) => {
           // Special processing for date fields
-          if (row.key === 'licenza_date' && row.value) {
+          if (key === "licenza_date" && value) {
             // For dates, ensure we handle ISO format properly
-            const date = new Date(row.value);
+            const date = new Date(value);
             if (!isNaN(date.getTime())) {
-              acc[row.key] = date.toISOString();
+              acc[key] = date.toISOString();
             }
           } else {
-            acc[row.key] = row.value;
+            acc[key] = value;
           }
-        }
-        return acc;
-      }, {} as Record<string, any>);
-      
-      console.log('Updating profile with:', updates);
-      
+          return acc;
+        }, {} as Record<string, any>);
+
+      console.log("Updating profile with:", updates);
+
       const response = await fetch(
         `${
           import.meta.env.VITE_SUPABASE_URL
@@ -330,82 +393,299 @@ export default function UserEdit() {
     }
   };
 
+  // Create Lesson
+
+  const createLesson = async (id: string) => {
+    const lessonData = {
+      profile_id: id,
+      title: "Lezione di Guida",
+      content: "Lezione di Guida",
+      amount_hours: 1,
+    };
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`, // Optional, if you have RLS policies
+          },
+          body: JSON.stringify(lessonData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create lesson");
+      }
+
+      const data = await response;
+      console.log('createLesson', data)
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      fetchProfileLessons(id);
+    }
+  };
+  
+  // Delete Lesson
+  const deleteLesson = async (id: string, profileId: string) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons?id=eq.${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`, // Optional, if you have RLS policies
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete lesson");
+      }
+      const data = await response;
+      console.log('deleteLesson', data)
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      fetchProfileLessons(profileId);
+    }
+  };
+
+  // Loading handling
   if (loading && !profile) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+
+  // Error handling
+  if (error)
+    return (
+      <div className="flex justify-center items-center h-screen mt-[-6rem]">
+        <div className="text-black">{error}</div>
+      </div>
+    );
 
   return (
-    <>
-      <h5 className="card-title my-4">Modifica Utente</h5>
+    <div className="container mx-auto py-6 space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">Modifica Utente</h1>
 
       {showConfirmAlert && (
-        <div className="card bg-primary/20 text-primary transition duration-300 ease-in-out my-4">
-          <div className="p-2 flex justify-between items-center">
-            <p className="text-white">Profilo aggiornato!</p>
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={() => setShowConfirmAlert(false)}>
-              Chiudi
-            </button>
-          </div>
+        <div className="rounded-lg bg-green-100 p-4 text-green-700 flex justify-between items-center">
+          <p>Profilo aggiornato con successo!</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowConfirmAlert(false)}>
+            Chiudi
+          </Button>
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
-        {/* User avatar */}
-        <div className="flex justify-center mb-4">
-          <Avatar sourceUrl={profile?.full_avatar_url} size={100} />
-        </div>
-
-        {/* Editable profile data table */}
-        <div className="card w-full">
-          <div className="card-body">
-            <h5 className="card-title mb-4 flex justify-between">
+      <div className="flex flex-row gap-6">
+        {/* User data card */}
+        <Card className="w-1/3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               Dati utente
-              <span className="badge badge-secondary size-8 p-0">
-                <span className="icon-[tabler--user-circle] size-5" />
-              </span>
-            </h5>
-            
-            <div style={{ width: '100%' }} className="mb-4">
-              <ThemeProvider theme={darkTheme}>
-                <CssBaseline />
-                <StyledDataGrid
-                  rows={rows}
-                  columns={columns}
-                  pageSizeOptions={[10]}
-                  disableRowSelectionOnClick
-                  onCellEditStop={handleCellEditCommit}
-                  getRowHeight={() => 'auto'}
-                  autoHeight
-                  hideFooter={rows.length <= 10}
-                  editMode="cell"
-                  cellModesModel={{}}
-                  sx={{
-                    '& .MuiDataGrid-cell--editing': {
-                      backgroundColor: 'rgb(255,215,115, 0.19)',
-                      color: '#1a3e72',
-                    },
-                    '& .Mui-error': {
-                      backgroundColor: 'rgb(126,10,15, 0.1)',
-                      color: '#750f0f',
-                    },
-                    '& .MuiDataGrid-cell': {
-                      padding: '12px',
-                    },
-                  }}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-muted-foreground">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </CardTitle>
+            <CardDescription>
+              Modifica le informazioni del profilo utente
+            </CardDescription>
+            <Avatar className="h-16 w-16">
+              <AvatarImage
+                src={profile?.full_avatar_url}
+                alt={profile?.nome_utente || "User avatar"}
+              />
+              <AvatarFallback>
+                {profile?.nome_utente
+                  ?.split(" ")
+                  .map((n: string) => n[0])
+                  .join("") || "U"}
+              </AvatarFallback>
+            </Avatar>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Personal Information */}
+            <div className="grid gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome_utente">Nome Completo</Label>
+                  <Input
+                    id="nome_utente"
+                    value={profile?.nome_utente || ""}
+                    onChange={(e) =>
+                      handleFieldChange("nome_utente", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" value={profile?.email || ""} disabled />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefono</Label>
+                  <Input
+                    id="phone"
+                    value={profile?.phone || ""}
+                    onChange={(e) => handleFieldChange("phone", e.target.value)}
+                    placeholder="+41 XX XXX XX XX"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="total_hours">Totale Ore</Label>
+                  <Input
+                    id="total_hours"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={totalHours || 0}
+                    onChange={(e) =>
+                      handleFieldChange("total_hours", Number(e.target.value))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="licenza_date">Data rilascio LAC</Label>
+                <Input
+                  id="licenza_date"
+                  type="date"
+                  value={
+                    profile?.licenza_date
+                      ? new Date(profile.licenza_date)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleFieldChange("licenza_date", e.target.value)
+                  }
                 />
-              </ThemeProvider>
+              </div>
             </div>
-            
-            <button
-              className="btn btn-primary"
+
+            {/* Checkboxes section */}
+            <div className="border rounded-lg p-4 space-y-4">
+              <h3 className="text-lg font-medium">Status & Certificazioni</h3>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    disabled={true}
+                    id="admin"
+                    checked={profile?.admin || false}
+                    onCheckedChange={(checked) =>
+                      handleFieldChange("admin", checked)
+                    }
+                  />
+                  <Label htmlFor="admin">Amministratore</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="sensibilizzazione"
+                    checked={profile?.sensibilizzazione || false}
+                    onCheckedChange={(checked) =>
+                      handleFieldChange("sensibilizzazione", checked)
+                    }
+                  />
+                  <Label htmlFor="sensibilizzazione">Sensibilizzazione</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="soccorritori"
+                    checked={profile?.soccorritori || false}
+                    onCheckedChange={(checked) =>
+                      handleFieldChange("soccorritori", checked)
+                    }
+                  />
+                  <Label htmlFor="soccorritori">Soccorritori</Label>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button
               onClick={updateProfile}
-              disabled={loading}>
+              disabled={loading}
+              className="w-full">
               {loading ? "Salvando..." : "Salva Profilo"}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        {/* Lessons card */}
+        <Card className="w-2/3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Lezioni
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-muted-foreground">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+              </svg>
+            </CardTitle>
+            <CardDescription>
+              Elenco delle lezioni registrate per questo utente
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {lessons && lessons.length > 0 ? (
+              <LessonsTable
+                lessons={lessons}
+                profile={profile}
+                createLesson={createLesson}
+                deleteLesson={deleteLesson}
+                id={id}
+              />
+            ) : (
+              <NoLessons lessons={lessons} profile={profile} createLesson={createLesson} id={id as any}/>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-start">
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-muted-foreground">
+                Totale ore:{" "}
+                <span className="font-medium">{profile?.total_hours || 0}</span>
+              </div>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
-    </>
+    </div>
   );
 }

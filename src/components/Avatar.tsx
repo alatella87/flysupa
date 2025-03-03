@@ -2,125 +2,95 @@
 import { useState } from "react";
 import { useUser } from "../hooks/useUser";
 
-export default function Avatar({
-  size,
-  editMode,
-  navbar,
-  sourceUrl
-}: {
-  size: number;
+// Shadcn Components
+import { Avatar as ShadcnAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+interface AvatarProps {
+  size?: "sm" | "md" | "lg" | "xl";
   editMode?: boolean;
   navbar?: boolean;
   sourceUrl?: string;
-}) {
+  className?: string;
+}
+
+export default function Avatar({
+  size = "md",
+  editMode = false,
+  navbar = false,
+  sourceUrl,
+  className = "",
+}: AvatarProps) {
   const { avatarUrl, uploadImage } = useUser();
   const [uploading, setUploading] = useState(false);
 
-  // Render logic remains the same
-  if (navbar && !avatarUrl) {
+  // Get image URL from props or context
+  const imgUrl = sourceUrl || avatarUrl;
+
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    return "U"; // Default fallback
+  };
+
+  // Size mapping
+  const sizeClass = {
+    sm: "h-10 w-10",
+    md: "h-16 w-16",
+    lg: "h-24 w-24",
+    xl: "h-36 w-36",
+  }[size];
+
+  // Simple avatar for navbar
+  if (navbar) {
     return (
-      <div className="avatar placeholder">
-        <div className="bg-neutral text-neutral-content w-28 rounded-full mb-4">
-          <span className="icon-[tabler--user] size-6"></span>
-        </div>
-      </div>
+      <ShadcnAvatar className={`${sizeClass} ${className}`}>
+        <AvatarImage src={imgUrl || ''} />
+        <AvatarFallback>{getInitials()}</AvatarFallback>
+      </ShadcnAvatar>
     );
   }
 
-  if (sourceUrl) {
-    return (
-      <div className="card sm:max-w-sm">
-        <div className="card-body flex justify-start">
-          <h5 className="card-title mb-4">Immagine profilo</h5>
-          <div className="h-[150px]">
-            {sourceUrl ? (
-              <img
-                src={sourceUrl}
-                alt="Avatar"
-                className="w-28 rounded-full mb-4 mt-2"
-              />
-            ) : (
-              <div className="avatar placeholder">
-                <div className="bg-neutral text-neutral-content w-16 rounded-full mb-4">
-                  <span className="icon-[tabler--user] size-6"></span>
-                </div>
-              </div>
-            )}
-          </div>
-          {editMode && (
-            <div className="card-actions mt-2">
-              <label className="btn btn-primary" htmlFor="single">
-                {uploading ? "Uploading ..." : "Carica foto"}
-              </label>
-              <input
-                style={{
-                  visibility: "hidden",
-                  position: "absolute",
-                }}
-                type="file"
-                id="single"
-                accept="image/*"
-                onChange={uploadImage}
-                disabled={uploading}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-
-  if (navbar && avatarUrl) {
-    return (
-      <img
-        width={size}
-        height={size}
-        src={avatarUrl}
-        alt="Avatar"
-        className="w-28 rounded-full mb-4"
-      />
-    );
-  }
-
+  // Full card with upload functionality
   return (
-    <div className="card sm:max-w-sm">
-      <div className="card-body flex justify-start min-w-[376px]">
-        <h5 className="card-title mb-4">Immagine profilo</h5>
-        <div className="h-[150px]">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="Avatar"
-              className="w-28 rounded-full mb-4 mt-2"
-            />
-          ) : (
-            <div className="avatar placeholder">
-              <div className="bg-neutral text-neutral-content w-16 rounded-full mb-4">
-                <span className="icon-[tabler--user] size-6"></span>
-              </div>
-            </div>
-          )}
-        </div>
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Immagine profilo</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center">
+        <ShadcnAvatar className={`${size === "xl" ? "h-36 w-36" : "h-24 w-24"} mb-4`}>
+          <AvatarImage src={imgUrl || ''} />
+          <AvatarFallback>{getInitials()}</AvatarFallback>
+        </ShadcnAvatar>
+
         {editMode && (
-          <div className="card-actions mt-2">
-            <label className="btn btn-primary" htmlFor="single">
-              {uploading ? "Uploading ..." : "Carica foto"}
+          <div className="mt-4 w-full">
+            <label htmlFor="avatar-upload" className="w-full">
+              <div className="w-full cursor-pointer">
+                <Button
+                  className="w-full"
+                  disabled={uploading}
+                >
+                  {uploading ? "Caricamento..." : "Carica foto"}
+                </Button>
+              </div>
             </label>
             <input
-              style={{
-                visibility: "hidden",
-                position: "absolute",
-              }}
               type="file"
-              id="single"
+              id="avatar-upload"
               accept="image/*"
               onChange={uploadImage}
               disabled={uploading}
+              className="sr-only"
             />
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

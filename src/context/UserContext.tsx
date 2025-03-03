@@ -4,16 +4,17 @@ import {supabase} from "../services/supabaseClient.tsx";
 interface User {
   id: string;
   email: string;
-  // Add other user properties if needed
+  total_hours: number;
 }
 
 interface Profile {
   isAdmin?: boolean | null;
   username?: string | null;
-  fullname?: string | null;
+  nome_utente?: string | null;
+  email?: string | null;
   website?: string | null;
   avatar_url?: string | null;
-  amount_hours?: number | null;
+  total_hours?: number | null;
 }
 
 interface UserContextType {
@@ -21,26 +22,27 @@ interface UserContextType {
   user: User | null;
   isAdmin: boolean | null;
   email: string | null;
-  fullName: string | null;
-  amountHours: number | null;
+  nomeUtente: string | null;
+  totalHours: number | null;
   avatarUrl: string | null;
-  setFullName: Dispatch<SetStateAction<string | null>>;
   uploadImage: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   updateProfile: (profile: Profile) => Promise<void>;
   showConfirmAlert: boolean;
-  setShowConfirmAlert: Dispatch<SetStateAction<boolean>>;
   shouldRedirect: boolean;
-  setShouldRedirect: Dispatch<SetStateAction<boolean>>;
   downloadAndSetUserAvatar: any;
+  // setStates
+  setNomeUtente: Dispatch<SetStateAction<string | null>>;
+  setShowConfirmAlert: Dispatch<SetStateAction<boolean>>;
+  setShouldRedirect: Dispatch<SetStateAction<boolean>>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [fullName, setFullName] = useState<string | null>(null);
+  const [nomeUtente, setNomeUtente] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [amountHours, setAmountHours] = useState<number | null>(null);
+  const [totalHours, setTotalHours] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -76,15 +78,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("full_name, avatar_url, amount_hours, admin")
+          .select("nome_utente, avatar_url, total_hours, admin")
           .eq("id", user.id)
           .single();
 
         if (error) throw error;
 
-        setFullName(data?.full_name || "");
+        setNomeUtente(data?.nome_utente || "");
         setIsAdmin(data?.admin || "");
-        setAmountHours(data?.amount_hours !== null ? Number(data.amount_hours) : null);
+        setTotalHours(data?.total_hours !== null ? Number(data.total_hours) : null);
         setEmail(data?.email || "");
 
         if (data?.avatar_url) {
@@ -100,12 +102,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     fetchProfileData();
   }, [user]);
 
+
   const updateProfile = async (profile: Profile): Promise<void> => {
     try {
       setLoading(true);
       const updates = {
         id: user?.id as string,
-        full_name: profile.fullname,
+        nome_utente: profile.nome_utente,
         username: profile.username,
         website: profile.website,
         avatar_url: profile.avatar_url,
@@ -116,7 +119,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      if (profile.fullname !== undefined) setFullName(profile.fullname);
+      if (profile.nome_utente !== undefined) setNomeUtente(profile.nome_utente);
       if (profile.avatar_url !== undefined) setAvatarUrl(profile.avatar_url);
 
       setShowConfirmAlert(true);
@@ -198,10 +201,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         email,
         loading,
         isAdmin,
-        fullName,
         avatarUrl,
-        amountHours,
-        setFullName,
+        totalHours,
+        nomeUtente,
+        setNomeUtente,
         uploadImage,
         updateProfile,
         showConfirmAlert,

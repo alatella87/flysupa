@@ -1,168 +1,208 @@
 "use client";
 import { useState } from "react";
 import { useUser } from "../hooks/useUser";
-import Avatar from "./Avatar";
+
+// Shadcn Components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
 
 export default function AccountForm() {
   const {
     user,
-    fullName,
-    setFullName,
-    amountHours,
+    nomeUtente,
+    setNomeUtente,
+    totalHours,
     updateProfile,
     showConfirmAlert,
     setShowConfirmAlert,
+    avatarUrl,
+    uploadImage,
   } = useUser();
 
   const [isEditMode, setIsEditMode] = useState(false);
-
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name.split(' ').map(n => n[0]?.toUpperCase() || '').join('');
+  };
+  
+  // Handle avatar upload with loading state
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadingAvatar(true);
+    try {
+      await uploadImage(e);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   return (
-    <>
-      { /* Edit toggle */ }
-      <div className="container mx-auto flex-col h-full">
-        <div className="flex flex-row items-center justify-between my-4">
-          <h5 className="card-title items-center">Benvenuto</h5>
-          <div className="flex items-center gap-2">
-            <label
-              className="label label-text text-base mt-1"
-              htmlFor="switchType2">
-              Modifica profilo
-            </label>
-            <input
-              type="checkbox"
-              className="switch switch-primary mt-1"
-              id="switchType2"
-              checked={isEditMode}
-              onChange={(e) => setIsEditMode(e.target.checked)}
-            />
-          </div>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-3xl font-bold tracking-tight">Benvenuto</h1>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="edit-mode"
+          checked={isEditMode}
+          onCheckedChange={setIsEditMode}
+        />
+        <Label htmlFor="edit-mode">Modifica profilo</Label>
+      </div>
+
+      {/* Confirmation alert */}
+      {showConfirmAlert && (
+        <div className="rounded-lg bg-green-100 p-4 text-green-700 flex justify-between items-center">
+          <p>Profilo aggiornato con successo!</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowConfirmAlert(false)}>
+            Chiudi
+          </Button>
         </div>
+      )}
 
-        {/* Confirmation alert */}
-        {showConfirmAlert ? (
-          
-          <div className="card removing:opacity-0 bg-primary/20 text-primary transition duration-300 ease-in-out my-4">
-            <div
-              style={{
-                padding: "0.2rem 1rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}>
-              <p>
-                <span
-                  style={{
-                    lineHeight: "38px",
-                    color: "white",
-                  }}>
-                  Profilo aggiornato!{" "}
-                </span>
-              </p>
-              <button
-                style={{ marginTop: "0rem", marginLeft: "1rem" }}
-                aria-label="Close Button"
-                className={"btn btn-sm btn-primary"}
-                onClick={() => setShowConfirmAlert(false)}>
-                <span className="color: primary">Chiudi</span>
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="flex flex-wrap gap-2 justify-between">
-          {/* Card 1 */}
-          <Avatar size={75} editMode={isEditMode} />
-          {/* Card 2 */}
-          <div className="card md:max-w-md">
-            <div className="card-body flex justify-start">
-              <h5 className="card-title mb-4 flex flex-row items-center justify-between">
-                Dati utente
-                <span className="badge badge-secondary size-8 p-0 mr-2">
-                  <span className="icon-[tabler--user-circle] size-5" />
-                </span>
-              </h5>
-              <div className="h-[150px] mbnpm run -auto">
-                <label className="mt-1" htmlFor="fullName">
-                  Email
-                </label>
-                <input
-                  className="input"
-                  id="email"
-                  type="text"
-                  value={user?.email}
-                  disabled
-                />
-                <div className="mt-4">
-                  <label className="mt-1" htmlFor="fullName">
-                    Nome Completo
-                  </label>
-                  <input
-                    className="input mb-4"
-                    id="fullName"
-                    type="text"
-                    value={fullName || ""}
-                    disabled={!isEditMode}
-                    onChange={(e) => setFullName(e.target.value)}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Avatar Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Il tuo profilo</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <Avatar className="h-36 w-36 mb-4">
+              <AvatarImage src={avatarUrl || ""} />
+              <AvatarFallback>{getInitials(nomeUtente || "")}</AvatarFallback>
+            </Avatar>
+            {isEditMode && (
+              <div className="mt-4 w-full">
+                <Label htmlFor="avatar">Cambia avatar</Label>
+                <div className="mt-1 relative">
+                  <Input
+                    id="avatar"
+                    type="file"
+                    accept="image/*"
+                    className={uploadingAvatar ? "opacity-50" : ""}
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
                   />
+                  {uploadingAvatar && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  )}
                 </div>
               </div>
-              {isEditMode ? (
-                <div className="mt-auto">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => updateProfile({ fullname: fullName })}
-                    disabled={loading}>
-                    {loading ? "Salva Profilo" : "Salva Profilo"}
-                  </button>
-                </div>
-              ) : null}
+            )}
+          </CardContent>
+        </Card>
+
+        {/* User Data Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Dati utente
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-muted-foreground">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="text"
+                value={user?.email || ""}
+                disabled
+              />
             </div>
-          </div>
-          {/* Card 3 */}
-          <div className="card md:max-w-md">
-            <div className="card-body">
-              <h5 className="card-title mb-4 flex flex-row items-center justify-between">
-                Totale Ore
-                <span className="badge badge-accent size-8 p-0 mr-2">
-                  <span className="icon-[tabler--clock] size-5" />
-                </span>
-              </h5>
-              <h5 className="card-title text-4xl mb-2.5">{amountHours} ore</h5>
-              <p className="mb-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome_utente">Nome Completo</Label>
+              <Input
+                id="nome_utente"
+                type="text"
+                value={nomeUtente || ""}
+                disabled={!isEditMode}
+                onChange={(e) => setNomeUtente(e.target.value)}
+              />
+            </div>
+          </CardContent>
+          {isEditMode && (
+            <CardFooter>
+              <Button
+                className="w-full"
+                onClick={() =>
+                  updateProfile({
+                    nome_utente: nomeUtente,
+                    email: null,
+                  })
+                }
+                disabled={loading}>
+                {loading ? "Salvando..." : "Salva Profilo"}
+              </Button>
+            </CardFooter>
+          )}
+        </Card>
+
+        {/* Hours Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Totale Ore
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-muted-foreground">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col justify-end">
+              <div className="text-4xl font-bold mb-2">{totalHours} ore</div>
+              <p className="text-muted-foreground">
                 Descrive il numero totale di ore fatte/fatturate
               </p>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
-      {/* <div className="container w-[100%] flex flex-row">
-        <iframe
-          id="edoobox_sgl"
-          style={{ width: "40%", border: "none", height: "643px" }}
-          src="https://app1.edoobox.com/sgl/Beispiel%20Kategorie%20A?edref=sgl"
-          name="edooboxFrame_sgl"
-          frameBorder="0"
-          data-scrolltop=""></iframe>
-        <iframe
-          id="edoobox_sgl"
-          src="https://iframe.vku-pgs.asa.ch/it/public/coursegroup/all/VktVXzQxMzQ=/1/vku/"
-          style={{ width: "60%", border: "none", height: "643px" }}>
-          Übersicht anzeigen
-        </iframe>
-        <iframe
-          id="teal-job-tracker-iframe-stable"
-          style={{
-            background: "rgb(255, 255, 255) !important",
-            width: "40px !important, height: 100vh !important",
-            inset: "0px auto auto !important",
-            zIndex: "2147483647 !important",
-            border: "0px !important",
-            boxShadow: "rgba(0, 0, 0, 0.25) 0px 0px 16px -3px !important",
-            transition: "right 0.25s",
-          }}></iframe>
-      </div> */}
-    </>
+    </div>
   );
 }

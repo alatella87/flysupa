@@ -1,0 +1,24 @@
+# FlySupa Project Guide
+
+## Build/Test Commands
+- `npm run dev` - Start development server
+- `npm run build` - Build for production (runs TypeScript type check)
+- `npm run lint` - Run ESLint on all files
+- `npm test` - Run all tests in watch mode
+- `npm run test:ui` - Run tests with UI
+- `npm run test:run` - Run tests once without watch mode
+- `npm test -- -t "test name"` - Run a specific test
+
+## Code Style Guidelines
+- TypeScript with strict typing; any is allowed (@typescript-eslint/no-explicit-any is off)
+- React components use functional style with hooks
+- Path aliases: import from '@/components', '@/lib/utils', etc.
+- UI components use shadcn/ui style (see components/ui)
+- Component naming: PascalCase for components, camelCase for functions/variables
+- Form validation: Uses react-hook-form with zod resolvers
+
+## Project Structure
+- Components use shadcn/ui patterns and Tailwind CSS
+- Authentication via Supabase
+- UI state management through React context (UserContext)
+- Follow existing import ordering: React, libraries, local components
