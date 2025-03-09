@@ -1,44 +1,11 @@
-import {createContext, Dispatch, ReactNode, SetStateAction, useEffect, useState} from "react";
+import {createContext, ReactNode, useEffect, useState} from "react";
 import {supabase} from "../services/supabaseClient.tsx";
-
-interface User {
-  id: string;
-  email: string;
-  total_hours: number;
-}
-
-interface Profile {
-  isAdmin?: boolean | null;
-  username?: string | null;
-  nome_utente?: string | null;
-  email?: string | null;
-  website?: string | null;
-  avatar_url?: string | null;
-  total_hours?: number | null;
-}
-
-interface UserContextType {
-  loading: boolean;
-  user: User | null;
-  isAdmin: boolean | null;
-  email: string | null;
-  nomeUtente: string | null;
-  totalHours: number | null;
-  avatarUrl: string | null;
-  uploadImage: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  updateProfile: (profile: Profile) => Promise<void>;
-  showConfirmAlert: boolean;
-  shouldRedirect: boolean;
-  downloadAndSetUserAvatar: any;
-  // setStates
-  setNomeUtente: Dispatch<SetStateAction<string | null>>;
-  setShowConfirmAlert: Dispatch<SetStateAction<boolean>>;
-  setShouldRedirect: Dispatch<SetStateAction<boolean>>;
-}
+import { User, Profile, UserContextType } from "@/types";
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  
   const [user, setUser] = useState<User | null>(null);
   const [nomeUtente, setNomeUtente] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -54,14 +21,30 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchUserData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          total_hours: 0
+        });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     };
 
     fetchUserData();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          total_hours: 0
+        });
+      } else {
+        setUser(null);
+      }
       setShouldRedirect(true); // Enable redirection when auth state changes
     });
 
@@ -85,9 +68,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
 
         setNomeUtente(data?.nome_utente || "");
-        setIsAdmin(data?.admin || "");
+        setIsAdmin(data?.admin || false);
         setTotalHours(data?.total_hours !== null ? Number(data.total_hours) : null);
-        setEmail(data?.email || "");
+        setEmail(user?.email || "");
 
         if (data?.avatar_url) {
           await downloadAndSetAvatar(data.avatar_url);

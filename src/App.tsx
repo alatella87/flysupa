@@ -12,16 +12,23 @@ import Users from "./pages/Users";
 import Account from "./pages/Account";
 import Register from "./pages/Auth/Register";
 import UserEdit from "./pages/UserEdit";
+import EditLesson from "./pages/EditLesson";
 import ConfirmRegistration from "./pages/Auth/ConfirmRegistration";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
-  
   const location = useLocation();
-  
+
   useEffect(() => {
     const loadFlyonui = async () => {
+      const cachedFlyonui = localStorage.getItem('flyonui');
+      if (cachedFlyonui) {
+        window.HSStaticMethods.autoInit();
+        return;
+      }
+
       await import("flyonui/flyonui");
+      localStorage.setItem('flyonui', 'loaded');
       window.HSStaticMethods.autoInit();
     };
     loadFlyonui();
@@ -29,20 +36,21 @@ function App() {
 
   return (
     <UserProvider>
-      <AuthRedirect/>
+      <AuthRedirect />
       <div className="min-h-screen bg-background">
-        {location.pathname !== "/login" && <Navbar/>}
+        {location.pathname !== "/login" && <Navbar />}
         <div className="p-4 md:p-6">
           <Routes>
-            <Route path="/" element={<Home/>}/>
-            <Route path="/home" element={<Dashboard/>}/>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/users" element={<Users/>}/>
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Dashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/users" element={<Users />} />
             <Route path="/user-edit/:id" element={<UserEdit />} />
-            <Route path="/account" element={<Account/>}/>
-            <Route path="/register" element={<Register/>}/>
-            <Route path="/check" element={<Check/>}/>
-            <Route path="/auth/confirm" element={<ConfirmRegistration/>}/>
+            <Route path="/edit-lesson/:id" element={<EditLesson />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/check" element={<Check />} />
+            <Route path="/auth/confirm" element={<ConfirmRegistration />} />
           </Routes>
         </div>
       </div>

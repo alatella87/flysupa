@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useUser } from "../hooks/useUser.tsx";
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
+import { Profile } from "@/types";
 
 // Shadcn Components
 import { Button } from "@/components/ui/button";
@@ -15,21 +16,6 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-
-interface Profile {
-  id: string;
-  nome_utente: string;
-  email: string;
-  admin: boolean;
-  updated_at: string;
-  total_hours: number;
-  avatar_url?: string;
-  days_difference: number;
-  phone: string;
-  sensibilizzazione: boolean;
-  soccorritori: boolean;
-  licenza_date?: string;
-}
 
 const formatDate = (dateStr: string | number | Date) => {
   if (!dateStr) return "N/A";

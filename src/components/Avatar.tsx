@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useUser } from "../hooks/useUser";
+import { AvatarProps } from "@/types";
 
 // Shadcn Components
 import { Avatar as ShadcnAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,14 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-interface AvatarProps {
-  size?: "sm" | "md" | "lg" | "xl";
-  editMode?: boolean;
-  navbar?: boolean;
-  sourceUrl?: string;
-  className?: string;
-}
 
 export default function Avatar({
   size = "md",

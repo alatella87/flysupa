@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient.tsx";
+import { Profile, Lesson } from "@/types";
 
 // Shadcn Components
 import { Button } from "@/components/ui/button";
@@ -18,180 +19,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "./ui/badge.tsx";
 
-interface ProfileData {
-  id: string;
-  nome_utente: string;
-  email: string;
-  total_hours: number;
-  admin: boolean;
-  sensibilizzazione?: boolean;
-  soccorritori?: boolean;
-  phone?: string;
-  licenza_date?: string;
-  full_avatar_url?: string;
-  avatar_url?: string;
-}
+// Custom Components
+import LessonsTable, { NoLessons, LoadingLessons } from "./LessonsTable";
 
-interface Lesson {
-  id: string;
-  date: string;
-  amount_hours: number;
-  created_at: string;
-  content: string;
-  profile_id: string;
-  title: string;
-}
-
-const LoadingLessons = () => (
-  <div className="text-center py-4">Caricamento lezioni...</div>
-);
-
-const LessonsTable = ({
-  id,
-  profile,
-  lessons,
-  createLesson,
-  deleteLesson,
-}: {
-  id: any;
-  profile: ProfileData | null;
-  lessons: Lesson[];
-  createLesson: (id: string) => void;
-  deleteLesson: (id: string, profileId: any) => void,
-}) => (
-  <Table>
-    <TableCaption>Lezioni registrate per {profile?.nome_utente}</TableCaption>
-    <TableHeader>
-      <TableRow>
-        <TableHead>
-          <Badge variant={"outline"}>#</Badge>
-        </TableHead>
-        <TableHead>Data</TableHead>
-        <TableHead>Titolo</TableHead>
-        <TableHead>Descrizione</TableHead>
-        <TableHead>Ore</TableHead>
-        <TableHead>Actions</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {lessons && lessons.length > 0 ? (
-        lessons.map((lesson) => (
-          <TableRow key={lesson.id}>
-            <TableCell>
-              <Badge variant={"secondary"}>{lesson.id}</Badge>
-            </TableCell>
-            <TableCell>
-              {new Date(lesson.created_at).toLocaleString("default", {
-                day: "2-digit",
-                month: "short",
-                year: "2-digit",
-              })}
-            </TableCell>
-            <TableCell>{lesson.title}</TableCell>
-            <TableCell>
-              {lesson.content && lesson.content.length > 50
-                ? `${lesson.content.substring(0, 50)}...`
-                : lesson.content}
-            </TableCell>
-            <TableCell>{lesson.amount_hours}</TableCell>
-            <TableCell>
-              <div className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mr-2"
-                  onClick={() => alert("test")}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => deleteLesson(lesson?.id, profile?.id)}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                  </svg>
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))
-      ) : (
-        <TableRow>
-          <TableCell colSpan={5} className="text-center">
-            Nessuna lezione disponibile
-          </TableCell>
-        </TableRow>
-      )}
-      <Button
-        onClick={() => createLesson(id)}
-        className="m-2 p-2"
-        size={"sm"}
-        variant={"secondary"}>
-        Aggiungi Lezione
-      </Button>
-    </TableBody>
-  </Table>
-);
-
-const NoLessons = ({
-  profile,
-  lessons,
-  createLesson,
-  id,
-}: {
-  profile: ProfileData | null;
-  lessons: any,
-  createLesson: (id: string) => void;
-  id: string;
-}) => (
-  <div className="text-left py-4 text-muted-foreground">
-    <Button
-      onClick={() => createLesson(id as any)}
-      className="p-2"
-      size={"sm"}
-      variant={"secondary"}>
-      Aggiungi Lezione
-    </Button>
-  </div>
-);
 
 export default function UserEditForm() {
   const { id } = useParams<{ id: string }>(); // Get user ID from URL
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [showConfirmAlert, setShowConfirmAlert] = useState(false);
   const [error, setError] = useState("");
@@ -240,8 +75,11 @@ export default function UserEditForm() {
 
   useEffect(() => {
     if (!id) return;
-    const hours = lessons?.reduce((total, lesson) => total + lesson.amount_hours, 0);
-    setTotalHours(hours)
+    const hours = lessons?.reduce(
+      (total: number, lesson: any) => total + lesson.amount_hours,
+      0
+    );
+    setTotalHours(hours);
   }, [lessons]);
 
   // Fetch Profile
@@ -294,6 +132,61 @@ export default function UserEditForm() {
     try {
       setLoadingLessons(true);
       const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons?profile_id=eq.${id}&order=date.asc`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch lessons");
+      }
+  
+      const lessonsData: Lesson[] = await response.json();
+  
+      // Fetch lesson details for each lesson
+      const detailedLessons = await Promise.all(
+        lessonsData.map(async (lesson) => {
+          const detailsResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lesson_item_details_view?lesson_id=eq.${lesson.id}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              },
+            }
+          );
+  
+          if (!detailsResponse.ok) {
+            console.warn(`Failed to fetch details for lesson ${lesson.id}`);
+            return lesson; // Return the lesson without additional details if fetch fails
+          }
+  
+          const details = await detailsResponse.json();
+          return { ...lesson, details }; // Assign all details instead of just details[0]
+        })
+      );
+  
+      setLessons(detailedLessons as any);
+    } catch (err) {
+      console.error("Error fetching lessons:", err);
+    } finally {
+      setLoadingLessons(false);
+    }
+  };
+  
+
+
+  // Fetch Items
+  const fetchProfileLessonsItems = async (id: string) => {
+    try {
+      setLoadingLessons(true);
+      const response = await fetch(
         `${
           import.meta.env.VITE_SUPABASE_URL
         }/rest/v1/lessons?profile_id=eq.${id}`,
@@ -327,10 +220,13 @@ export default function UserEditForm() {
     }
   };
 
-  
+  // Keep total hours in sync with lessons
   const calculateTotalHours = (lessons: Lesson[]) => {
-    const hours = lessons.reduce((total, lesson) => total + lesson.amount_hours, 0);
-    setTotalHours(hours)
+    const hours = lessons.reduce(
+      (total, lesson) => total + lesson.amount_hours,
+      0
+    );
+    setTotalHours(hours);
   };
 
   // Handle edits from custom edit components
@@ -394,12 +290,11 @@ export default function UserEditForm() {
   };
 
   // Create Lesson
-
   const createLesson = async (id: string) => {
     const lessonData = {
       profile_id: id,
       title: "Lezione di Guida",
-      content: "Lezione di Guida",
+      description: "Lezione di Guida",
       amount_hours: 1,
     };
     try {
@@ -421,14 +316,14 @@ export default function UserEditForm() {
       }
 
       const data = await response;
-      console.log('createLesson', data)
+      console.log("createLesson", data);
     } catch (err) {
       setError(err.message);
     } finally {
       fetchProfileLessons(id);
     }
   };
-  
+
   // Delete Lesson
   const deleteLesson = async (id: string, profileId: string) => {
     try {
@@ -443,12 +338,12 @@ export default function UserEditForm() {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error("Failed to delete lesson");
       }
       const data = await response;
-      console.log('deleteLesson', data)
+      console.log("deleteLesson", data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -468,8 +363,10 @@ export default function UserEditForm() {
     );
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Modifica Utente</h1>
+    <div className="container mx-auto py-6 space-y-6 sm:py-0">
+      <h1 className="text-3xl font-bold tracking-tight sm:text-xl">
+        Modifica Utente
+      </h1>
 
       {showConfirmAlert && (
         <div className="rounded-lg bg-green-100 p-4 text-green-700 flex justify-between items-center">
@@ -483,9 +380,9 @@ export default function UserEditForm() {
         </div>
       )}
 
-      <div className="flex flex-row gap-6">
+      <div className="flex gap-6">
         {/* User data card */}
-        <Card className="w-1/3">
+        <Card className="md:w-1/3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Dati utente
@@ -507,7 +404,7 @@ export default function UserEditForm() {
             <CardDescription>
               Modifica le informazioni del profilo utente
             </CardDescription>
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-10 w-10">
               <AvatarImage
                 src={profile?.full_avatar_url}
                 alt={profile?.nome_utente || "User avatar"}
@@ -638,7 +535,7 @@ export default function UserEditForm() {
         </Card>
 
         {/* Lessons card */}
-        <Card className="w-2/3">
+        <Card className="w-full md:w-2/3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Lezioni
@@ -670,10 +567,15 @@ export default function UserEditForm() {
                 profile={profile}
                 createLesson={createLesson}
                 deleteLesson={deleteLesson}
-                id={id}
+                id={id as any}
               />
             ) : (
-              <NoLessons lessons={lessons} profile={profile} createLesson={createLesson} id={id as any}/>
+              <NoLessons
+                lessons={lessons}
+                profile={profile}
+                createLesson={createLesson}
+                id={id as any}
+              />
             )}
           </CardContent>
           <CardFooter className="flex justify-start">

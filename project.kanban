@@ -1,0 +1,36 @@
+{
+  "lists": [
+    {
+      "id": "a0c05c9b-d12f-41de-b1fa-b3638c72f4f6",
+      "title": "Items Story",
+      "cards": [
+        {
+          "id": "5d697d17-d375-4da4-96c1-97886cdfee4a",
+          "listId": "a0c05c9b-d12f-41de-b1fa-b3638c72f4f6",
+          "title": "Create a Multiselect Dropdown",
+          "description": "",
+          "labels": [],
+          "checkboxes": [],
+          "comments": []
+        }
+      ]
+    },
+    {
+      "id": "9ca0b69f-f29b-4f26-b4b3-35700343e2b9",
+      "title": "Carica Licenza",
+      "cards": []
+    },
+    {
+      "id": "db2d183a-61c6-4878-b7c4-7fb723302dd1",
+      "title": "Admin Dashboard",
+      "cards": []
+    }
+  ],
+  "archive": {
+    "lists": [],
+    "cards": []
+  },
+  "settings": {
+    "labels": []
+  }
+}
