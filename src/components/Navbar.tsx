@@ -29,7 +29,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="container mx-auto py-12 space-y-6">
+    <div className="container mx-auto pt-6 space-y-6">
     <nav className="flex items-center justify-between p-4 bg-card shadow-md rounded-lg">
       <div className="flex-1">
         <Link

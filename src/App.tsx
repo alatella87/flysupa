@@ -42,7 +42,7 @@ function App() {
         <div className="p-4 md:p-6">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Dashboard />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/users" element={<Users />} />
             <Route path="/user-edit/:id" element={<UserEdit />} />

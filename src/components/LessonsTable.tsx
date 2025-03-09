@@ -41,7 +41,6 @@ export default function LessonsTable({
       <Button
         onClick={() => createLesson(id)}
         className="p-2 mb-6"
-        size={"sm"}
         variant={"secondary"}>
         + Aggiungi Lezione
       </Button>

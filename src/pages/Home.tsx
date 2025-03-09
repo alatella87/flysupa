@@ -1,19 +1,326 @@
-import logo from "../assets/sgl.svg";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { Link, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "../hooks/useUser";
+import { supabase } from "../services/supabaseClient";
+import Avatar from "@/components/Avatar";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface UpcomingLesson {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  profile_id: string;
+  profiles: {
+    avatar_url: string;
+    nome_utente: string;
+  };
+  processed_avatar_url?: string;
+  isToday?: boolean;
+}
 
 export default function Home() {
-  const { user, isAdmin } = useUser();
+  const { user, isAdmin, downloadAndSetUserAvatar } = useUser();
+  const navigate = useNavigate();
+  const [upcomingLessons, setUpcomingLessons] = useState<UpcomingLesson[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Function to check if a date is today
+  function checkIsToday(dateString: string): boolean {
+    // Format both dates to YYYY-MM-DD format for reliable comparison
+    const formattedLessonDate = dateString.split("T")[0];
+    const formattedToday = new Date().toISOString().split("T")[0];
+
+    return formattedLessonDate === formattedToday;
+  }
+
+  // Format a date with day of week
+  function formatDate(dateString: string): string {
+    if (!dateString) return "TBD";
+
+    const dateObj = new Date(dateString);
+    return dateObj.toLocaleString("default", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    });
+  }
+
+  // Format time
+  function formatTime(timeString: string): string {
+    if (!timeString) return "TBD";
+
+    try {
+      return new Date(`1970-01-01T${timeString}`).toLocaleTimeString(
+        "default",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }
+      );
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return timeString;
+    }
+  }
+
+  // Process a single lesson (handle avatar URL and today check)
+  async function processLesson(
+    lesson: UpcomingLesson
+  ): Promise<UpcomingLesson> {
+    try {
+      const isTodayLesson = checkIsToday(lesson.date);
+      let processedLesson = { ...lesson, isToday: isTodayLesson };
+
+      // Process avatar if available
+      if (lesson.profiles?.avatar_url) {
+        try {
+          const avatarUrl = await downloadAndSetUserAvatar(
+            lesson.profiles.avatar_url
+          );
+          processedLesson.processed_avatar_url = avatarUrl;
+        } catch (error) {
+          console.error("Error processing avatar:", error);
+        }
+      }
+
+      return processedLesson;
+    } catch (error) {
+      console.error("Error processing lesson:", error);
+      return lesson;
+    }
+  }
+
+  // Fetch all upcoming lessons
+  async function fetchLessons() {
+    setLoading(true);
+
+    try {
+      // Use gte to include today's lessons
+      const { data, error } = await supabase
+        .from("lessons")
+        .select(
+          `
+          id,
+          title,
+          date,
+          time,
+          profile_id,
+          profiles (avatar_url, nome_utente)
+        `
+        )
+        .gte("date", new Date().toISOString().split("T")[0])
+        .order("date", { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        console.log("Raw data from API:", data);
+
+        // Process each lesson
+        const processedLessons = await Promise.all(
+          data.map((lesson) => processLesson(lesson))
+        );
+
+        setUpcomingLessons(processedLessons);
+
+        // For debugging
+        console.log("Today's date:", new Date().toISOString().split("T")[0]);
+        console.log("Processed lessons:", processedLessons);
+      } else {
+        setUpcomingLessons([]);
+      }
+    } catch (error) {
+      console.error("Error fetching lessons:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    if (isAdmin) {
+      fetchLessons();
+    }
+  }, [isAdmin]);
+
+  // Group lessons
+  const todayLessons = upcomingLessons.filter((lesson) => lesson.isToday);
+  const futureLessons = upcomingLessons.filter((lesson) => !lesson.isToday);
+
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen p-2 gap-16">
-      <main className="flex flex-col items-center justify-center flex-1 w-full max-w-3xl mx-auto">
+    <div className="container flex flex-row justify-between mx-auto py-2 space-y-6">
         {user ? (
-          <></>
-        )  
-        : (
-          <Card className="w-full mt-[-12rem]">
+          isAdmin ? (
+            <>
+              <Card className="w-1/2">
+                <CardHeader>
+                  <CardTitle>Prossime lezioni</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="text-center py-4">
+                      Caricamento lezioni...
+                    </div>
+                  ) : upcomingLessons.length > 0 ? (
+                    <Table>
+                      <TableCaption>Lista delle prossime lezioni</TableCaption>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Student</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {/* Today's lessons */}
+                        {todayLessons.length > 0 && (
+                          <>
+                            <TableRow>
+                              <TableCell colSpan={4} className="bg-muted">
+                                <div className="font-semibold py-1">Oggi</div>
+                              </TableCell>
+                            </TableRow>
+                            {todayLessons.map((lesson) => (
+                              <TableRow key={lesson.id}>
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar
+                                      size="sm"
+                                      navbar={true}
+                                      sourceUrl={
+                                        lesson.processed_avatar_url || ""
+                                      }
+                                    />
+                                    <span>
+                                      {lesson.profiles?.nome_utente ||
+                                        "Unknown Student"}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{formatDate(lesson.date)}</TableCell>
+                                <TableCell>{formatTime(lesson.time)}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                      navigate(`/edit-lesson/${lesson.id}`)
+                                    }>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      className="mr-1">
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Edit
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </>
+                        )}
+
+                        {/* Future lessons */}
+                        {futureLessons.length > 0 && (
+                          <>
+                            <TableRow>
+                              <TableCell colSpan={4} className="bg-muted">
+                                <div className="font-semibold py-1">
+                                  Prossimamente
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                            {futureLessons.map((lesson) => (
+                              <TableRow key={lesson.id}>
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar
+                                      size="sm"
+                                      navbar={true}
+                                      sourceUrl={
+                                        lesson.processed_avatar_url || ""
+                                      }
+                                    />
+                                    <span>
+                                      {lesson.profiles?.nome_utente ||
+                                        "Unknown Student"}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{formatDate(lesson.date)}</TableCell>
+                                <TableCell>{formatTime(lesson.time)}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                      navigate(`/edit-lesson/${lesson.id}`)
+                                    }>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      className="mr-1">
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Edit
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </>
+                        )}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-4">
+                      No upcoming lessons found
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card className="w-full">
+              <CardContent className="flex flex-col items-center p-6">
+                <h2 className="text-xl font-semibold mb-4">
+                  Welcome back, {user.email}
+                </h2>
+                <p className="text-center text-muted-foreground mb-6">
+                  Access your lesson history and upcoming schedule
+                </p>
+              </CardContent>
+            </Card>
+          )
+        ) : (
+          <Card className="w-full">
             <CardContent className="flex flex-col items-center p-8 bg-white">
               <Link
                 className="font-semibold text-foreground hover:text-primary mb-6 transition-colors"
@@ -36,18 +343,6 @@ export default function Home() {
             </CardContent>
           </Card>
         )}
-      </main>
-
-      <footer className="flex gap-6 flex-wrap items-center justify-center py-4">
-        <Button asChild variant="link">
-          <a
-            href="https://scuolaguidalugano.ch"
-            target="_blank"
-            rel="noopener noreferrer">
-            Sito scuola guida
-          </a>
-        </Button>
-      </footer>
     </div>
   );
 }
