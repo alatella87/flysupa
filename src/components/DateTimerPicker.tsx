@@ -178,10 +178,10 @@ export function DateTimePicker24h({ lessonId }: DateTimePicker24hProps) {
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal dark:border-slate-700 bg-popover dark:bg-slate-900",
             !date && "text-muted-foreground"
           )}>
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="mr-2 h-4 w-8" />
           {date ? (
             <>
               {date.toLocaleString("default", {

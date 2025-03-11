@@ -61,7 +61,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("nome_utente, avatar_url, total_hours, admin")
+          .select("nome_utente, avatar_url, admin")
           .eq("id", user.id)
           .single();
 
@@ -84,7 +84,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     fetchProfileData();
   }, [user]);
-
 
   const updateProfile = async (profile: Profile): Promise<void> => {
     try {
@@ -170,7 +169,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         .download(path);
 
       if (error) throw error;
-
       return URL.createObjectURL(data);
     } catch (error) {
       console.error("Error downloading image:", error);
@@ -194,7 +192,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setShowConfirmAlert,
         shouldRedirect,
         setShouldRedirect,
-        downloadAndSetUserAvatar
+        downloadAndSetUserAvatar,
       }}>
       {children}
     </UserContext.Provider>

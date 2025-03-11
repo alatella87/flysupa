@@ -36,9 +36,10 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Cerca..."
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'days_difference', desc: true } // Default sorting for 'Licenza scade' column
+    { id: 'total_hours', desc: true } // Default sorting for 'Licenza scade' column
   ])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [globalFilter, setGlobalFilter] = useState("")
 
   const table = useReactTable({
     data,
@@ -55,7 +56,9 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+      globalFilter,
     },
+    onGlobalFilterChange: setGlobalFilter,
   })
 
   return (
@@ -79,26 +82,24 @@ export function DataTable<TData, TValue>({
             </svg>
             <Input
               placeholder={searchPlaceholder}
-              value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-              onChange={(event) =>
-                table.getColumn(searchColumn)?.setFilterValue(event.target.value)
-              }
-              className="pl-8 max-w-sm"
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-8 max-w-sm text-base dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 dark:border-slate-700"
             />
           </div>
         </div>
       )}
-      <div className="rounded-md border">
+      <div className="rounded-md border dark:border-slate-700">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="dark:border-slate-700">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="cursor-pointer hover:bg-gray-100"
+                      className="cursor-pointer hover:bg-gray-100 dark:text-slate-100 text-base font-medium"
                     >
                       {header.isPlaceholder
                         ? null
@@ -122,9 +123,10 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="dark:border-slate-700"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="dark:text-slate-100 text-base">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -132,7 +134,10 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center dark:text-slate-400 text-base"
+                >
                   Nessun risultato.
                 </TableCell>
               </TableRow>
@@ -146,10 +151,11 @@ export function DataTable<TData, TValue>({
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          className="text-base"
         >
           Precedente
         </Button>
-        <div className="text-sm">
+        <div className="text-base">
           Pagina {table.getState().pagination.pageIndex + 1} di{" "}
           {table.getPageCount()}
         </div>
@@ -158,6 +164,7 @@ export function DataTable<TData, TValue>({
           size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          className="text-base"
         >
           Successiva
         </Button>

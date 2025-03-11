@@ -165,24 +165,24 @@ export default function Home() {
         {user ? (
           isAdmin ? (
             <>
-              <Card className="w-1/2">
+              <Card className="w-1/2 dark:border-slate-700 dark:bg-slate-900">
                 <CardHeader>
-                  <CardTitle>Prossime lezioni</CardTitle>
+                  <CardTitle className="dark:text-slate-100">Prossime lezioni</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
-                    <div className="text-center py-4">
+                    <div className="text-center py-4 dark:text-slate-400">
                       Caricamento lezioni...
                     </div>
                   ) : upcomingLessons.length > 0 ? (
                     <Table>
-                      <TableCaption>Lista delle prossime lezioni</TableCaption>
+                      <TableCaption className="dark:text-slate-400">Lista delle prossime lezioni</TableCaption>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead>Student</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                        <TableRow className="dark:border-slate-700">
+                          <TableHead className="dark:text-slate-100">Student</TableHead>
+                          <TableHead className="dark:text-slate-100">Date</TableHead>
+                          <TableHead className="dark:text-slate-100">Time</TableHead>
+                          <TableHead className="text-right dark:text-slate-100">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -190,35 +190,31 @@ export default function Home() {
                         {todayLessons.length > 0 && (
                           <>
                             <TableRow>
-                              <TableCell colSpan={4} className="bg-muted">
-                                <div className="font-semibold py-1">Oggi</div>
+                              <TableCell colSpan={4} className="bg-muted dark:bg-slate-800 dark:border-slate-700">
+                                <div className="font-semibold py-1 dark:text-slate-100">Oggi</div>
                               </TableCell>
                             </TableRow>
                             {todayLessons.map((lesson) => (
-                              <TableRow key={lesson.id}>
-                                <TableCell className="font-medium">
+                              <TableRow key={lesson.id} className="dark:border-slate-700 dark:hover:bg-slate-800/50">
+                                <TableCell className="font-medium dark:text-slate-100">
                                   <div className="flex items-center gap-2">
                                     <Avatar
                                       size="sm"
                                       navbar={true}
-                                      sourceUrl={
-                                        lesson.processed_avatar_url || ""
-                                      }
+                                      sourceUrl={lesson.processed_avatar_url || ""}
                                     />
                                     <span>
-                                      {lesson.profiles?.nome_utente ||
-                                        "Unknown Student"}
+                                      {lesson.profiles?.nome_utente || "Unknown Student"}
                                     </span>
                                   </div>
                                 </TableCell>
-                                <TableCell>{formatDate(lesson.date)}</TableCell>
-                                <TableCell>{formatTime(lesson.time)}</TableCell>
+                                <TableCell className="dark:text-slate-100">{formatDate(lesson.date)}</TableCell>
+                                <TableCell className="dark:text-slate-100">{formatTime(lesson.time)}</TableCell>
                                 <TableCell className="text-right">
                                   <Button
                                     variant="outline"
-                                    onClick={() =>
-                                      navigate(`/edit-lesson/${lesson.id}`)
-                                    }>
+                                    className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+                                    onClick={() => navigate(`/edit-lesson/${lesson.id}`)}>
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
                                       width="16"
@@ -233,7 +229,7 @@ export default function Home() {
                                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
-                                    Edit
+                                    Modifica
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -245,37 +241,33 @@ export default function Home() {
                         {futureLessons.length > 0 && (
                           <>
                             <TableRow>
-                              <TableCell colSpan={4} className="bg-muted">
-                                <div className="font-semibold py-1">
+                              <TableCell colSpan={4} className="bg-muted dark:bg-slate-800 dark:border-slate-700">
+                                <div className="font-semibold py-1 dark:text-slate-100">
                                   Prossimamente
                                 </div>
                               </TableCell>
                             </TableRow>
                             {futureLessons.map((lesson) => (
-                              <TableRow key={lesson.id}>
-                                <TableCell className="font-medium">
+                              <TableRow key={lesson.id} className="dark:border-slate-700 dark:hover:bg-slate-800/50">
+                                <TableCell className="font-medium dark:text-slate-100">
                                   <div className="flex items-center gap-2">
                                     <Avatar
                                       size="sm"
                                       navbar={true}
-                                      sourceUrl={
-                                        lesson.processed_avatar_url || ""
-                                      }
+                                      sourceUrl={lesson.processed_avatar_url || ""}
                                     />
                                     <span>
-                                      {lesson.profiles?.nome_utente ||
-                                        "Unknown Student"}
+                                      {lesson.profiles?.nome_utente || "Unknown Student"}
                                     </span>
                                   </div>
                                 </TableCell>
-                                <TableCell>{formatDate(lesson.date)}</TableCell>
-                                <TableCell>{formatTime(lesson.time)}</TableCell>
+                                <TableCell className="dark:text-slate-100">{formatDate(lesson.date)}</TableCell>
+                                <TableCell className="dark:text-slate-100">{formatTime(lesson.time)}</TableCell>
                                 <TableCell className="text-right">
                                   <Button
                                     variant="outline"
-                                    onClick={() =>
-                                      navigate(`/edit-lesson/${lesson.id}`)
-                                    }>
+                                    className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+                                    onClick={() => navigate(`/edit-lesson/${lesson.id}`)}>
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
                                       width="16"
@@ -290,7 +282,7 @@ export default function Home() {
                                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
-                                    Edit
+                                    Modifica
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -300,7 +292,7 @@ export default function Home() {
                       </TableBody>
                     </Table>
                   ) : (
-                    <div className="text-center py-4">
+                    <div className="text-center py-4 dark:text-slate-400">
                       No upcoming lessons found
                     </div>
                   )}

@@ -171,37 +171,43 @@ async function fetchLessonById(id: any) {
   return (
     <div className="container mx-auto py-6">
       <div className="flex items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Modifica Lezione</h1>
-        {lesson && lesson.id && <Badge className="ml-2 mt-1.5" variant={'outline'}>{lesson.id}</Badge>}
+        <h1 className="text-3xl font-bold tracking-tight dark:text-slate-100">Modifica Lezione</h1>
+        {lesson && lesson.id && (
+          <Badge className="ml-2 mt-1.5 dark:border-slate-700 dark:text-slate-100" variant="outline">
+            {lesson.id}
+          </Badge>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-4">
-        <Card className="flex-1 min-w-[250px]">
+        <Card className="flex-1 min-w-[250px] dark:border-slate-700 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle>Data</CardTitle>
-            <CardDescription>Data della lezione</CardDescription>
+            <CardTitle className="dark:text-slate-100">Data</CardTitle>
+            <CardDescription className="dark:text-slate-400">Data della lezione</CardDescription>
           </CardHeader>
           <CardContent>
             <DateTimePicker24h lessonId={lesson?.id as string} />
           </CardContent>
         </Card>
 
-        <Card className="flex-1 min-w-[250px]">
+        <Card className="flex-1 min-w-[250px] dark:border-slate-700 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle>Contenuto</CardTitle>
-            <CardDescription>
-              Temi e argomenti
-            </CardDescription>
+            <CardTitle className="dark:text-slate-100">Contenuto</CardTitle>
+            <CardDescription className="dark:text-slate-400">Temi e argomenti</CardDescription>
           </CardHeader>
           <CardContent>
             <Command
               onKeyDown={handleKeyDown}
               className="overflow-visible bg-transparent">
-              <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+              <div className="group border border-input dark:border-slate-700 rounded-md px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <div className="flex flex-wrap gap-1">
                   {selected.map((item) => {
                     return (
-                      <Badge key={item.id} variant="secondary">
+                      <Badge 
+                        key={item.id} 
+                        variant="secondary" 
+                        className="text-md dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                      >
                         {item.id} - {item.title}
                         <button
                           className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -215,7 +221,7 @@ async function fetchLessonById(id: any) {
                             e.stopPropagation();
                           }}
                           onClick={() => handleUnselect(item)}>
-                          <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                          <X className="h-3 w-3 text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-100" />
                         </button>
                       </Badge>
                     );
@@ -227,39 +233,41 @@ async function fetchLessonById(id: any) {
                     onBlur={() => setOpen(false)}
                     onFocus={() => setOpen(true)}
                     placeholder="Seleziona..."
-                    className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                    className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400"
                   />
                 </div>
               </div>
               <div className="relative mt-2">
                 <CommandList>
                   {open && availableItems.length > 0 ? (
-                    <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+                    <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-slate-900 text-popover-foreground shadow-md outline-none animate-in">
                       <CommandGroup className="h-[250px] overflow-auto">
                         {availableItems
-                        .filter(item => !selected.some(s => s.id === item.id))
-                        .sort((a, b) => a.id - b.id)
-                        .map((item) => {
-                          return (
-                            <CommandItem
-                              key={item.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onSelect={async (value) => {
-                                setInputValue("");
-                                // Add to UI immediately for better UX
-                                setSelected((prev) => [...prev, item]);
-                                
-                                // Send the association to the API
-                                await associateItemToLesson(lesson?.id as string, item.id);
-                              }}
-                              className={"cursor-pointer"}>
-                              {item.id} - {item.title}
-                            </CommandItem>
-                          );
-                        })}
+                          .filter(
+                            (item) => !selected.some((s) => s.id === item.id)
+                          )
+                          .sort((a, b) => a.id - b.id)
+                          .map((item) => {
+                            return (
+                              <CommandItem
+                                key={item.id}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                                onSelect={async (value) => {
+                                  setInputValue("");
+                                  setSelected((prev) => [...prev, item]);
+                                  await associateItemToLesson(
+                                    lesson?.id as string,
+                                    item.id
+                                  );
+                                }}
+                                className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
+                                {item.id} - {item.title}
+                              </CommandItem>
+                            );
+                          })}
                       </CommandGroup>
                     </div>
                   ) : null}
@@ -267,7 +275,6 @@ async function fetchLessonById(id: any) {
               </div>
             </Command>
           </CardContent>
-
         </Card>
       </div>
     </div>

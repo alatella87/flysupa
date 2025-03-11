@@ -40,39 +40,39 @@ export default function LessonsTable({
     <>
       <Button
         onClick={() => createLesson(id)}
-        className="p-2 mb-6"
+        className="p-2 mb-6 dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
         variant={"secondary"}>
         + Aggiungi Lezione
       </Button>
       <Table>
-        <TableCaption>
+        <TableCaption className="dark:text-slate-400">
           Lezioni registrate per {profile?.nome_utente}
         </TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Data</TableHead>
-            <TableHead>Ora</TableHead>
-            <TableHead className="text-right">Argomenti</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-            <TableHead className="w-[100px] text-right">
-              <Badge variant={"outline"}>id</Badge>
+            <TableHead className="dark:text-slate-100">Data</TableHead>
+            <TableHead className="dark:text-slate-100">Ora</TableHead>
+            <TableHead className="text-right dark:text-slate-100">Argomenti</TableHead>
+            <TableHead className="text-right dark:text-slate-100">Actions</TableHead>
+            <TableHead className="w-[100px] text-right dark:text-slate-100">
+              <Badge variant={"outline"} className="dark:border-slate-600 dark:text-slate-100">id</Badge>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {lessons && lessons.length > 0 ? (
             lessons.map((lesson) => (
-              <TableRow key={lesson.id}>
-                <TableCell>
+              <TableRow key={lesson.id} className="dark:border-slate-700">
+                <TableCell className="dark:text-slate-100">
                   {lesson.date ? (
                     new Date(lesson.date).toLocaleString("default", {
                       day: "2-digit",
                       month: "short",
                       year: "2-digit",
-                    })) : <Badge variant={"outline"}>tbd</Badge>
+                    })) : <Badge variant={"outline"} className="dark:border-slate-600 dark:text-slate-100">tbd</Badge>
                   }
                 </TableCell>
-                <TableCell>
+                <TableCell className="dark:text-slate-100">
                   {lesson.time ? (
                     new Date(`1970-01-01T${lesson.time}`).toLocaleTimeString("default", {
                       hour: "2-digit",
@@ -80,11 +80,11 @@ export default function LessonsTable({
                       hour12: false,
                     })
                   ) : (
-                    <Badge variant={"outline"}>tbd</Badge>
+                    <Badge variant={"outline"} className="dark:border-slate-600 dark:text-slate-100">tbd</Badge>
                   )}
                 </TableCell>
 
-                <TableCell className="text-right">
+                <TableCell className="text-right dark:text-slate-100">
                   {lesson.details && lesson.details.length > 0 ? (
                     <>
                       {lesson.details.map((detail, index) => (
@@ -92,11 +92,11 @@ export default function LessonsTable({
                           key={index}
                           className={clsx(
                             "ml-2",
-                            !detail.completion_degree && "bg-[#aeaeae]",
+                            !detail.completion_degree && "bg-[#aeaeae] dark:bg-white dark:text-slate-900",
                             detail.completion_degree === "Trained" &&
-                              "bg-orange-500",
+                              "bg-orange-500 dark:bg-orange-400",
                             detail.completion_degree === "Mastered" &&
-                              "bg-[#0d580d]"
+                              "bg-[#0d580d] dark:bg-green-500"
                           )}>
                           {detail.lesson_item_id}
                         </Badge>
@@ -112,7 +112,7 @@ export default function LessonsTable({
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="mr-2"
+                      className="mr-2 dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
                       onClick={() =>
                         navigate(`/edit-lesson/${lesson?.id}`, {
                           state: { selectedLessons: lesson },
@@ -135,6 +135,7 @@ export default function LessonsTable({
                     <Button
                       variant="outline"
                       size="sm"
+                      className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
                       onClick={() => {
                         setLessonToDelete({ 
                           id: lesson.id, 
@@ -160,13 +161,13 @@ export default function LessonsTable({
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge variant={"outline"}>{lesson.id}</Badge>
+                  <Badge variant={"outline"} className="dark:border-slate-600 dark:text-slate-100">{lesson.id}</Badge>
                 </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center">
+              <TableCell colSpan={5} className="text-center dark:text-slate-400">
                 Nessuna lezione disponibile
               </TableCell>
             </TableRow>
@@ -176,10 +177,10 @@ export default function LessonsTable({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle>Conferma eliminazione</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-slate-100">Conferma eliminazione</DialogTitle>
+            <DialogDescription className="dark:text-slate-400">
               Sei sicuro di voler cancellare la lezione {lessonToDelete?.id}?
             </DialogDescription>
           </DialogHeader>
@@ -188,12 +189,14 @@ export default function LessonsTable({
               type="button"
               variant="secondary"
               onClick={() => setIsDeleteDialogOpen(false)}
+              className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
             >
               Annulla
             </Button>
             <Button
               type="button" 
               variant="destructive"
+              className="dark:bg-red-600 dark:text-white dark:hover:bg-red-700"
               onClick={() => {
                 if (lessonToDelete) {
                   deleteLesson(lessonToDelete.id, lessonToDelete.profileId);
@@ -222,10 +225,10 @@ export function NoLessons({
   id: string;
 }) {
   return (
-    <div className="text-left py-4 text-muted-foreground">
+    <div className="text-left py-4 text-muted-foreground dark:text-slate-400">
       <Button
         onClick={() => createLesson(id)}
-        className="p-2"
+        className="p-2 dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
         size={"sm"}
         variant={"secondary"}>
         Aggiungi Lezione

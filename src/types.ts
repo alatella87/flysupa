@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 // Common interfaces for FlySupa application
 
 // User related interfaces
@@ -8,11 +10,11 @@ export interface User {
 }
 
 export interface Profile {
-  id: string;
-  nome_utente: string;
-  email: string;
-  total_hours: number;
-  admin: boolean;
+  id?: string;
+  nome_utente?: string;
+  email?: string;
+  total_hours?: number;
+  admin?: boolean;
   sensibilizzazione?: boolean;
   soccorritori?: boolean;
   phone?: string;
@@ -57,30 +59,50 @@ export interface AvatarProps {
   size?: "sm" | "md" | "lg" | "xl";
   editMode?: boolean;
   navbar?: boolean;
+  userEditForm?: boolean;
   sourceUrl?: string;
   className?: string;
+  lessonsCount?: number;
 }
 
 // Context interfaces
 export interface UserContextType {
-  loading: boolean;
+  // Core user data (null-able properties)
   user: User | null;
-  isAdmin: boolean | null;
   email: string | null;
   nomeUtente: string | null;
-  totalHours: number | null;
   avatarUrl: string | null;
-  uploadImage: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  updateProfile: (profile: Profile) => Promise<void>;
+  totalHours: number | null;
+  isAdmin: boolean | null;
+
+  // Boolean flags
+  loading: boolean;
+  isLoadingHours: boolean;
   showConfirmAlert: boolean;
   shouldRedirect: boolean;
-  downloadAndSetUserAvatar: any;
-  setNomeUtente: React.Dispatch<React.SetStateAction<string | null>>;
-  setShowConfirmAlert: React.Dispatch<React.SetStateAction<boolean>>;
-  setShouldRedirect: React.Dispatch<React.SetStateAction<boolean>>;
+
+  // Data arrays
+  profileTotalHours: ProfileTotalHours[];
+
+  // State setters
+  setNomeUtente: (name: string) => void;
+  setShowConfirmAlert: (show: boolean) => void;
+  setShouldRedirect: (redirect: boolean) => void;
+
+  // Async operations
+  uploadImage: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  updateProfile: (profile: Profile) => Promise<void>;
+  downloadAndSetUserAvatar: (path: string) => Promise<string | undefined>;
+  refetchTotalHours: () => Promise<void>;
 }
 
 // Global interfaces
 export interface HSStaticMethods {
   autoInit: () => void;
+}
+
+// Also add this interface if not already defined
+interface ProfileTotalHours {
+  profile_id: string;
+  total_hours: number;
 }

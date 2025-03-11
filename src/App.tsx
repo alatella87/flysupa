@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, Routes, Route } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
+import { ThemeProvider } from "./components/theme-provider"
 
 import AuthRedirect from "./components/AuthRedirect";
 import Navbar from "./components/Navbar";
@@ -19,42 +20,52 @@ import Dashboard from "./pages/Dashboard";
 function App() {
   const location = useLocation();
 
-  useEffect(() => {
+  useEffect(() => { 
     const loadFlyonui = async () => {
       const cachedFlyonui = localStorage.getItem('flyonui');
-      if (cachedFlyonui) {
-        window.HSStaticMethods.autoInit();
-        return;
+      
+      try {
+        const flyonui = await import("flyonui/flyonui");
+        
+        if (!cachedFlyonui) {
+          localStorage.setItem('flyonui', 'loaded');
+        }
+        // Check if HSStaticMethods exists before calling
+        if ((window as any).HSStaticMethods && typeof (window as any).HSStaticMethods.autoInit === 'function') {
+          (window as any).HSStaticMethods.autoInit();
+        } else {
+          console.warn('HSStaticMethods.autoInit is not available');
+        }
+      } catch (err) {
+        console.error('Error loading flyonui:', err);
       }
-
-      await import("flyonui/flyonui");
-      localStorage.setItem('flyonui', 'loaded');
-      window.HSStaticMethods.autoInit();
     };
     loadFlyonui();
   }, [location.pathname]);
 
   return (
-    <UserProvider>
-      <AuthRedirect />
-      <div className="min-h-screen bg-background">
-        {location.pathname !== "/login" && <Navbar />}
-        <div className="p-4 md:p-6">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/user-edit/:id" element={<UserEdit />} />
-            <Route path="/edit-lesson/:id" element={<EditLesson />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/check" element={<Check />} />
-            <Route path="/auth/confirm" element={<ConfirmRegistration />} />
-          </Routes>
+    <ThemeProvider defaultTheme="system" storageKey="app-theme">
+      <UserProvider>
+        <AuthRedirect />
+        <div className="min-h-screen bg-background">
+          {location.pathname !== "/login" && <Navbar />}
+          <div className="p-4 md:p-6">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/user-edit/:id" element={<UserEdit />} />
+              <Route path="/edit-lesson/:id" element={<EditLesson />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/check" element={<Check />} />
+              <Route path="/auth/confirm" element={<ConfirmRegistration />} />
+            </Routes>
+          </div>
         </div>
-      </div>
-    </UserProvider>
+      </UserProvider>
+    </ThemeProvider>
   );
 }
 
