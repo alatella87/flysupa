@@ -346,19 +346,12 @@ export default function LessonsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="dark:text-slate-100">Data</TableHead>
-            <TableHead className="dark:text-slate-100">Ora</TableHead>
+            <TableHead className="dark:text-slate-100">Ora</TableHead>w
             <TableHead className="text-right dark:text-slate-100">
               Argomenti
             </TableHead>
             <TableHead className="text-right dark:text-slate-100">
               Actions
-            </TableHead>
-            <TableHead className="w-[100px] text-right dark:text-slate-100">
-              <Badge
-                variant={"outline"}
-                className="dark:border-slate-600 dark:text-slate-100">
-                id
-              </Badge>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -413,6 +406,14 @@ export default function LessonsTable({
                         tbd
                       </Badge>
                     )}
+                  </TableCell>
+
+                  <TableCell className="text-right">
+                    <Badge
+                      variant={"outline"}
+                      className="dark:border-slate-600 dark:text-slate-100">
+                      {lesson.id}
+                    </Badge>
                   </TableCell>
 
                   <TableCell className="text-right dark:text-slate-100">
@@ -483,13 +484,6 @@ export default function LessonsTable({
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Badge
-                      variant={"outline"}
-                      className="dark:border-slate-600 dark:text-slate-100">
-                      {lesson.id}
-                    </Badge>
-                  </TableCell>
                 </TableRow>
 
                 {/* Expanded content row */}
@@ -502,10 +496,14 @@ export default function LessonsTable({
                             Dettagli argomenti
                           </h4>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                          {lesson.details && lesson.details.length > 0
-                            ? lesson.details.map(
-                                (detail: any, index: number) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-2">
+                          {lesson.details?.length > 0
+                            ? lesson.details
+                                .slice() // Create a copy to avoid mutating the original array
+                                .sort(
+                                  (a, b) => a.lesson_item_id - b.lesson_item_id
+                                ) // Sort by lesson_item_id
+                                .map((detail: any, index: number) => (
                                   <div
                                     key={index}
                                     className={clsx(
@@ -559,18 +557,20 @@ export default function LessonsTable({
                                           className="cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            // Call function to remove association
-                                            removeItemAssociation(lesson.id, detail.lesson_item_id);
+                                            removeItemAssociation(
+                                              lesson.id,
+                                              detail.lesson_item_id
+                                            );
                                           }}>
-                                          <X className="h-3 w-3 text-red-500" />
+                                          <X className="h-3 w-3 font-black" />
                                         </Badge>
                                       </div>
                                     )}
                                   </div>
-                                )
-                              )
+                                ))
                             : null}
-                                                      <Button
+
+                          <Button
                             size="icon"
                             variant="outline"
                             className="flex w-full items-center bg-muted p-2 rounded bg-gray-400 text-white dark:bg-slate-800 cursor-pointer transition-all"
@@ -578,8 +578,8 @@ export default function LessonsTable({
                               e.stopPropagation();
                               openAddItemDialog(lesson.id);
                             }}>
-                              Aggiungi
-                            <Plus className="h-4 w-4" /> 
+                            Aggiungi
+                            <Plus className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -645,7 +645,8 @@ export default function LessonsTable({
             <DialogDescription className="dark:text-slate-400">
               Seleziona un argomento da aggiungere alla lezione.
               <span className="block mt-1 text-amber-500 dark:text-amber-400 text-sm">
-                Gli argomenti già "Trained" (arancione) o "Mastered" (verde) sono mostrati in una sezione dedicata.
+                Gli argomenti già "Trained" (arancione) o "Mastered" (verde)
+                sono mostrati in una sezione dedicata.
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -709,27 +710,35 @@ export default function LessonsTable({
                               }}
                               className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
                               <div className="flex items-center w-full">
-                                <span>{item.id} - {item.title}</span>
+                                <span>
+                                  {item.id} - {item.title}
+                                </span>
                               </div>
                             </CommandItem>
                           ))}
-                          
+
                         {/* Add a divider and header for items already assigned to THIS lesson */}
-                        {availableItems.some(item => 
-                          item.completion_degree && 
-                          String(item.title).toLowerCase().includes(inputValue.toLowerCase())
+                        {availableItems.some(
+                          (item) =>
+                            item.completion_degree &&
+                            String(item.title)
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase())
                         ) && (
                           <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-500 border-t dark:border-slate-700">
                             Argomenti già assegnati in questa lezione
                           </div>
                         )}
-                        
+
                         {/* Show items already assigned to THIS lesson */}
                         {availableItems
-                          .filter(item => 
-                            item.title && 
-                            String(item.title).toLowerCase().includes(inputValue.toLowerCase()) &&
-                            item.completion_degree
+                          .filter(
+                            (item) =>
+                              item.title &&
+                              String(item.title)
+                                .toLowerCase()
+                                .includes(inputValue.toLowerCase()) &&
+                              item.completion_degree
                           )
                           .sort((a, b) => Number(a.id) - Number(b.id))
                           .map((item) => (
@@ -751,48 +760,63 @@ export default function LessonsTable({
                               }}
                               className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
                               <div className="flex items-center w-full">
-                                <span>{item.id} - {item.title}</span>
+                                <span>
+                                  {item.id} - {item.title}
+                                </span>
                                 {item.completion_degree && (
-                                  <Badge 
+                                  <Badge
                                     className={clsx(
                                       "ml-auto",
                                       item.completion_degree === "Trained" &&
                                         "bg-orange-500 dark:bg-orange-400",
                                       item.completion_degree === "Mastered" &&
                                         "bg-[#0d580d] dark:bg-green-500"
-                                    )}
-                                  >
+                                    )}>
                                     {item.completion_degree}
                                   </Badge>
                                 )}
                               </div>
                             </CommandItem>
                           ))}
-                          
+
                         {/* Add a divider and header for items with global completion status (but not in this lesson) */}
-                        {availableItems.some(item => 
-                          item.title && 
-                          String(item.title).toLowerCase().includes(inputValue.toLowerCase()) && 
-                          item.global_completion?.degree && 
-                          !item.completion_degree
+                        {availableItems.some(
+                          (item) =>
+                            item.title &&
+                            String(item.title)
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase()) &&
+                            item.global_completion?.degree &&
+                            !item.completion_degree
                         ) && (
                           <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-500 border-t dark:border-slate-700">
                             Argomenti con stato in altre lezioni
                           </div>
                         )}
-                        
+
                         {/* Show items with global completion status but not in this lesson */}
                         {availableItems
-                          .filter(item => 
-                            item.title && 
-                            String(item.title).toLowerCase().includes(inputValue.toLowerCase()) &&
-                            item.global_completion?.degree && 
-                            !item.completion_degree
+                          .filter(
+                            (item) =>
+                              item.title &&
+                              String(item.title)
+                                .toLowerCase()
+                                .includes(inputValue.toLowerCase()) &&
+                              item.global_completion?.degree &&
+                              !item.completion_degree
                           )
                           .sort((a, b) => {
                             // Sort by status (Mastered first, then Trained)
-                            if (a.global_completion?.degree === "Mastered" && b.global_completion?.degree !== "Mastered") return -1;
-                            if (a.global_completion?.degree !== "Mastered" && b.global_completion?.degree === "Mastered") return 1;
+                            if (
+                              a.global_completion?.degree === "Mastered" &&
+                              b.global_completion?.degree !== "Mastered"
+                            )
+                              return -1;
+                            if (
+                              a.global_completion?.degree !== "Mastered" &&
+                              b.global_completion?.degree === "Mastered"
+                            )
+                              return 1;
                             // Then by ID
                             return Number(a.id) - Number(b.id);
                           })
@@ -815,17 +839,20 @@ export default function LessonsTable({
                               }}
                               className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
                               <div className="flex items-center w-full">
-                                <span>{item.id} - {item.title}</span>
+                                <span>
+                                  {item.id} - {item.title}
+                                </span>
                                 {item.global_completion?.degree && (
-                                  <Badge 
+                                  <Badge
                                     className={clsx(
                                       "ml-auto",
-                                      item.global_completion.degree === "Trained" &&
+                                      item.global_completion.degree ===
+                                        "Trained" &&
                                         "bg-orange-500 dark:bg-orange-400",
-                                      item.global_completion.degree === "Mastered" &&
+                                      item.global_completion.degree ===
+                                        "Mastered" &&
                                         "bg-[#0d580d] dark:bg-green-500"
-                                    )}
-                                  >
+                                    )}>
                                     {item.global_completion.degree}
                                   </Badge>
                                 )}
