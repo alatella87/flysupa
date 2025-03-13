@@ -5,7 +5,7 @@ import { useUser } from "../hooks/useUser";
 import { AvatarProps } from "@/types";
 
 // Shadcn Components
-import { Avatar as ShadcnAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar as ShadcnAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -94,7 +94,7 @@ export default function Avatar({
   const [uploading, setUploading] = useState(false);
 
   // Get image URL from props or context
-  const imgUrl = sourceUrl || avatarUrl;
+  const imgUrl = sourceUrl || avatarUrl || null;
 
   // Size mapping for avatar
   const sizeClass = {
@@ -111,7 +111,7 @@ export default function Avatar({
   const scaleFactor = userEditForm ? 2 : 1;
   const scaledCircleSize = CIRCLE_SIZE * scaleFactor;
   const scaledRadius = RADIUS * scaleFactor;
-  const scaledStrokeWidth = STROKE_WIDTH * (userEditForm ? 1.5 : 1); // Slightly thicker stroke for larger circle
+  const scaledStrokeWidth = STROKE_WIDTH * (userEditForm ? 3 : 1.5); // Slightly thicker stroke for larger circle
 
   // Function to calculate segment path with scaling
   const getScaledSegmentPath = (index: number) => {

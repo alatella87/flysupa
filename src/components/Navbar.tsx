@@ -3,8 +3,9 @@ import { useUser } from "../hooks/useUser";
 import { signOutUser } from "../services/authServices";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Maximize, Minimize } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { useState, useEffect } from "react";
 
 // Shadcn Components
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,36 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { user, email, avatarUrl, isAdmin } = useUser();
   const { theme, setTheme } = useTheme();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Check if fullscreen is supported and update state when it changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen()
+          .catch(err => console.error(`Error attempting to enable fullscreen mode: ${err.message}`));
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+          .catch(err => console.error(`Error attempting to exit fullscreen mode: ${err.message}`));
+      }
+    }
+  };
 
   // Extract initials for avatar fallback
   const getInitials = (email: string) => {
@@ -32,7 +63,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="container mx-auto pt-6 space-y-6">
+    <div className="container pt-6 space-y-6">
     <nav className="flex items-center justify-between p-4 bg-card rounded-lg border shadow-md dark:bg-transparent dark:border-slate-700 dark:shadow-none">
       <div className="flex items-center gap-4">
         <Link
@@ -99,11 +130,29 @@ export default function Navbar() {
       
       {user && (
         <div className="flex items-center gap-4">
+          {/* Fullscreen Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleFullscreen}
+            className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? (
+              <Minimize className="h-5 w-5" />
+            ) : (
+              <Maximize className="h-5 w-5" />
+            )}
+            <span className="sr-only">Toggle fullscreen</span>
+          </Button>
+
+          {/* Dark Mode Toggle Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             {theme === "dark" ? (
               <Sun className="h-5 w-5" />

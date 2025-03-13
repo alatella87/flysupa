@@ -64,15 +64,17 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       {searchColumn && (
-        <div className="flex items-center py-4">
+        <div className="flex justify-between items-center py-4">
+          <h1 className="text-2xl font-bold tracking-tight dark:text-slate-100">
+            Utenti
+          </h1>
           <div className="relative max-w-sm">
             <svg
               className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+              stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -99,8 +101,7 @@ export function DataTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="cursor-pointer hover:bg-gray-100 dark:text-slate-100 text-base font-medium"
-                    >
+                      className="cursor-pointer hover:bg-gray-100 dark:text-slate-100 text-base font-medium">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -108,11 +109,11 @@ export function DataTable<TData, TValue>({
                             header.getContext()
                           )}
                       {{
-                        asc: ' ↑',
-                        desc: ' ↓',
+                        asc: " ↑",
+                        desc: " ↓",
                       }[header.column.getIsSorted() as string] ?? null}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
@@ -123,11 +124,15 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="dark:border-slate-700"
-                >
+                  className="dark:border-slate-700">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="dark:text-slate-100 text-base">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <TableCell
+                      key={cell.id}
+                      className="dark:text-slate-100 text-base">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -136,8 +141,7 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center dark:text-slate-400 text-base"
-                >
+                  className="h-24 text-center dark:text-slate-400 text-base">
                   Nessun risultato.
                 </TableCell>
               </TableRow>
@@ -151,8 +155,7 @@ export function DataTable<TData, TValue>({
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
-          className="text-base"
-        >
+          className="text-base">
           Precedente
         </Button>
         <div className="text-base">
@@ -164,11 +167,10 @@ export function DataTable<TData, TValue>({
           size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
-          className="text-base"
-        >
+          className="text-base">
           Successiva
         </Button>
       </div>
     </div>
-  )
+  );
 }

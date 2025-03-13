@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
+    "host": "vite --host",
     "test:ui": "vitest --ui",
     "test:run": "vitest run"
   },

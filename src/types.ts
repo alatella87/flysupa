@@ -44,6 +44,11 @@ export interface LessonItem {
   title: ReactNode;
   id: string;
   name: string;
+  completion_degree?: string | null;
+  global_completion?: {
+    degree: string | null;
+    lessonId: string | null;
+  };
 }
 
 // Component props interfaces
@@ -51,8 +56,10 @@ export interface LessonsTableProps {
   id: string;
   profile: Profile | null;
   lessons: Lesson[];
+  lessonsCount: number;
   createLesson: (id: string) => void;
   deleteLesson: (id: string, profileId: string) => void;
+  refetchLessons?: (profileId: string) => Promise<void>;
 }
 
 export interface AvatarProps {

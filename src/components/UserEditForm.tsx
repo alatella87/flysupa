@@ -34,8 +34,7 @@ export default function UserEditForm() {
   const [showConfirmAlert, setShowConfirmAlert] = useState(false);
   const [error, setError] = useState("");
   const [lessons, setLessons] = useState<Lesson[]>([]); // Initialize as an empty array
-  const [loadingLessons, setLoadingLessons] = useState(true); // Initialize as true
-  const [totalHours, setTotalHours] = useState<number>(0); // Initialize as 0
+  const [loadingLessons, setLoadingLessons] = useState(true); //Initialize as 0
   const [lessonsCount, setLessonsCount] = useState<number>(0); // Initialize as 0
 
   // Profile fields that we want to display in our table
@@ -75,36 +74,32 @@ export default function UserEditForm() {
 
     try {
       setLoading(true);
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_SUPABASE_URL
-        }/rest/v1/profiles_table?id=eq.${id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-        }
-      );
+      
+      // Use Supabase client for consistency
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile");
+      if (error) {
+        throw new Error(`Failed to fetch profile: ${error.message}`);
       }
 
-      const data = await response.json();
-
-      if (data.length > 0) {
-        const profileData = data[0];
+      if (data) {
+        const profileData = data;
 
         // Download and set avatar if available
         if (profileData.avatar_url) {
           const avatarUrl = await downloadAndSetUserAvatar(profileData.avatar_url);
           profileData.full_avatar_url = avatarUrl;
         }
+        
+        console.log("Fetched profile data:", profileData);
         setProfile(profileData);
       }
     } catch (err: unknown) {
+      console.error("Error in fetchProfile:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
@@ -180,34 +175,55 @@ export default function UserEditForm() {
     try {
       setLoading(true);
 
-      // Extract updatable fields from profile
-      const updates = Object.entries(profile)
-        .filter(([key]) => key !== "email" && key in fieldDisplayNames)
-        .reduce((acc, [key, value]) => {
-          return { ...acc, [key]: value };
-        }, {});
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            Prefer: "return=minimal",
-          },
-          body: JSON.stringify(updates),
+      // Define the fields we want to update
+      const updatableFields = [
+        'nome_utente',
+        'phone',
+        'licenza_date',
+        'admin',
+        'sensibilizzazione',
+        'soccorritori'
+      ];
+      
+      // Extract only the fields we want to update, filtering out undefined values
+      const updates = updatableFields.reduce((acc, key) => {
+        // Only include the field if it exists in the profile and is not undefined
+        if (profile[key as keyof typeof profile] !== undefined) {
+          acc[key] = profile[key as keyof typeof profile];
         }
-      );
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // Add required fields for upsert
+      const profileData = {
+        ...updates,
+        id, // Make sure ID is included
+        updated_at: new Date().toISOString()
+      };
 
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
+      console.log("Updating profile with data:", profileData);
+
+      // Use supabase client with upsert
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(profileData)
+        .select();
+
+      if (error) {
+        console.error("Supabase error:", error);
+        throw new Error(`Profile update failed: ${error.message}`);
       }
 
+      console.log("Profile updated successfully:", data);
+
+      // Refetch profile data to ensure UI is in sync
+      await fetchProfile();
+      
+      // Show success message
       setShowConfirmAlert(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      console.error("Error in updateProfile:", err);
+      setError(err instanceof Error ? err.message : "Unknown error updating profile");
     } finally {
       setLoading(false);
     }
@@ -284,11 +300,7 @@ export default function UserEditForm() {
     );
 
   return (
-    <div className="container mx-auto py-6 space-y-6 sm:py-0">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-xl dark:text-slate-100">
-        Modifica Utente
-      </h1>
-
+    <div className="container py-6 space-y-6">
       {showConfirmAlert && (
         <div className="rounded-lg bg-green-100 dark:bg-green-900 p-4 text-green-700 dark:text-green-100 flex justify-between items-center">
           <p>Profilo aggiornato con successo!</p>
@@ -302,9 +314,9 @@ export default function UserEditForm() {
         </div>
       )}
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* User data card */}
-        <Card className="md:w-1/3 dark:border-slate-700 dark:bg-slate-900">
+        <Card className="w-full lg:w-1/3 dark:border-slate-700 dark:bg-slate-900">
           <CardHeader>
             <div className="flex flex-row items-center gap-4">
               <div>
@@ -343,19 +355,7 @@ export default function UserEditForm() {
           <CardContent className="space-y-4">
             {/* Personal Information */}
             <div className="grid gap-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome_utente" className="dark:text-slate-100">Nome Completo</Label>
-                  <Input
-                    id="nome_utente"
-                    value={profile?.nome_utente || ""}
-                    onChange={(e) =>
-                      handleFieldChange("nome_utente", e.target.value)
-                    }
-                    className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700"
-                  />
-                </div>
-
+              <div className="gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="dark:text-slate-100">Email</Label>
                   <Input 
@@ -374,21 +374,17 @@ export default function UserEditForm() {
                     id="phone"
                     value={profile?.phone || ""}
                     onChange={(e) => handleFieldChange("phone", e.target.value)}
-                    placeholder="+41 XX XXX XX XX"
+                    placeholder="+41"
                     className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:placeholder:text-slate-500"
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="total_hours" className="dark:text-slate-100">Totale Ore</Label>
+                  <Label htmlFor="nome_utente" className="dark:text-slate-100">Nome Completo</Label>
                   <Input
-                    id="total_hours"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={profile?.total_hours || 0}
+                    id="nome_utente"
+                    value={profile?.nome_utente || ""}
                     onChange={(e) =>
-                      handleFieldChange("total_hours", Number(e.target.value))
+                      handleFieldChange("nome_utente", e.target.value)
                     }
                     className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700"
                   />
@@ -396,7 +392,7 @@ export default function UserEditForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="licenza_date" className="dark:text-slate-100">Data rilascio LAC</Label>
+                <Label htmlFor="licenza_date" className="dark:text-slate-100">LAC</Label>
                 <Input
                   id="licenza_date"
                   type="date"
@@ -470,7 +466,7 @@ export default function UserEditForm() {
         </Card>
 
         {/* Lessons card */}
-        <Card className="w-full md:w-2/3 dark:border-slate-700 dark:bg-slate-900">
+        <Card className="w-full lg:w-2/3 dark:border-slate-700 dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 dark:text-slate-100">
               Lezioni
@@ -500,9 +496,11 @@ export default function UserEditForm() {
               <LessonsTable
                 lessons={lessons}
                 profile={profile}
+                lessonsCount={lessonsCount}
                 createLesson={createLesson}
                 deleteLesson={deleteLesson}
                 id={id as any}
+                refetchLessons={fetchProfileLessons}
               />
             ) : (
               <NoLessons

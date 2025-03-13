@@ -108,7 +108,7 @@ export default function Users() {
     },
     {
       accessorKey: "licenza_date",
-      header: "Data rilascio LAC",
+      header: "LAC",
       cell: ({ row }) => (
         <span className="dark:text-slate-100">
           {formatDate(row.original.licenza_date || '')}
@@ -117,7 +117,7 @@ export default function Users() {
     },
     {
       accessorKey: "days_difference",
-      header: "Licenza scade fra",
+      header: "scade",
       cell: ({ row }) => {
         const profile = row.original;
         if (!profile.licenza_date) return (
@@ -132,7 +132,7 @@ export default function Users() {
         let badgeVariant: "default" | "warning" | "outline" = "outline";
 
         if (daysLeft < 90 && daysLeft > 0) {
-          badgeVariant = "default";
+          badgeVariant = "warning";
         } else if (daysLeft <= 0) {
           badgeVariant = "warning";
         }
@@ -148,25 +148,25 @@ export default function Users() {
     },
     {
       accessorKey: "soccorritori",
-      header: "Soccorritori",
+      header: "SOC",
       cell: ({ row }) => (
         row.original.soccorritori &&
         <Badge
           variant="tertiary"
           className="text-sm text-white dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600">
-          Completato
+          ok
         </Badge>
       ),
     },
     {
       accessorKey: "sensibilizzazione",
-      header: "Sensibilizzazione",
+      header: "SEN",
       cell: ({ row }) => (
         row.original.sensibilizzazione &&
         <Badge
           variant="tertiary"
           className="text-sm text-white dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600">
-          Completato
+          ok
         </Badge>
       ),
     },
@@ -236,15 +236,7 @@ export default function Users() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold tracking-tight mb-4 dark:text-slate-100">Lista Utenti</h1>
-
       <Card className="dark:border-slate-700 dark:bg-slate-900">
-        <CardHeader>
-          <CardTitle className="dark:text-slate-100 text-xl">Utenti</CardTitle>
-          <CardDescription className="dark:text-slate-400 text-base">
-            Lista di tutti gli utenti registrati nella piattaforma.
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
