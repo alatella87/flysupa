@@ -141,8 +141,7 @@ export default function LessonsTable({
       // Fetch ALL lesson item associations to get completion degrees from any lesson
       const { data: allAssociations, error: allAssociationsError } = await supabase
         .from("lesson_item_associations")
-        .select("lesson_id, lesson_item_id, completion_degree")
-        .or(`completion_degree.eq.Trained,completion_degree.eq.Mastered`);
+        .select("lesson_id, lesson_item_id, completion_degree");
         
       if (allAssociationsError) {
         console.error("Error fetching all associations:", allAssociationsError.message);
@@ -162,8 +161,12 @@ export default function LessonsTable({
       
       // Create a map of item_id to completion_degree for current lesson
       const currentLessonCompletionMap: Record<string, string | null> = {};
+      const currentLessonItemsSet = new Set<string>();
+      
       if (currentLessonAssociations) {
         currentLessonAssociations.forEach(assoc => {
+          // Mark all items associated with this lesson, regardless of completion degree
+          currentLessonItemsSet.add(assoc.lesson_item_id);
           currentLessonCompletionMap[assoc.lesson_item_id] = assoc.completion_degree;
         });
       }
@@ -172,6 +175,9 @@ export default function LessonsTable({
       const globalCompletionMap: Record<string, {degree: string | null, lessonId: string | null}> = {};
       if (allAssociations) {
         allAssociations.forEach(assoc => {
+          // Skip associations for the current lesson (we handle those separately)
+          if (assoc.lesson_id === lessonId) return;
+          
           const currentBest = globalCompletionMap[assoc.lesson_item_id];
           // Prioritize "Mastered" over "Trained" degree
           if (!currentBest || 
@@ -185,13 +191,23 @@ export default function LessonsTable({
       }
       
       // Merge the completion degrees into the items
-      const itemsWithCompletion = allItems.map(item => ({
-        ...item,
-        // Use current lesson completion degree if exists, otherwise null
-        completion_degree: currentLessonCompletionMap[item.id] || null,
-        // Include global completion status separate from the current lesson
-        global_completion: globalCompletionMap[item.id] || { degree: null, lessonId: null }
-      }));
+      const itemsWithCompletion = allItems.map(item => {
+        // Check if the item is associated with the current lesson
+        const isInCurrentLesson = currentLessonItemsSet.has(item.id);
+
+        return {
+          ...item,
+          // For items in the current lesson, use their completion degree
+          // For other items, use null
+          completion_degree: isInCurrentLesson 
+            ? currentLessonCompletionMap[item.id] 
+            : null,
+          // Mark items as assigned to this lesson with a special flag
+          inCurrentLesson: isInCurrentLesson,
+          // Include global completion status separate from the current lesson  
+          global_completion: globalCompletionMap[item.id] || { degree: null, lessonId: null }
+        };
+      });
       
       setAvailableItems(itemsWithCompletion);
     } catch (err) {
@@ -328,12 +344,32 @@ export default function LessonsTable({
         lesson_item_id: itemId,
       };
 
+      // First update the UI immediately for better responsiveness
+      // Create a new array with the updated item
+      const updatedItems = availableItems.map(item => {
+        if (item.id === itemId) {
+          // Mark this item as being in the current lesson
+          return { 
+            ...item, 
+            inCurrentLesson: true, 
+            completion_degree: item.completion_degree || null // Keep existing completion degree if any
+          };
+        }
+        return item;
+      });
+      
+      // Update the state to show the change immediately
+      setAvailableItems(updatedItems);
+      
+      // Then make the API call
       const { data, error } = await supabase
         .from("lesson_item_associations")
         .insert([association]);
 
       if (error) {
         console.error("Error associating item to lesson:", error.message);
+        // If there was an error, revert the UI change
+        setAvailableItems(availableItems);
         return null;
       }
 
@@ -347,6 +383,8 @@ export default function LessonsTable({
       return data;
     } catch (err) {
       console.error("Error in associateItemToLesson:", err);
+      // If there was an error, revert the UI change
+      setAvailableItems(availableItems);
       return null;
     }
   };
@@ -362,6 +400,16 @@ export default function LessonsTable({
     setUpdating(updateKey);
     
     try {
+      // First update the UI immediately for better responsiveness
+      // Create a backup of the current state for potential rollback
+      const originalItems = [...availableItems];
+      
+      // Update the item's status and force UI refresh
+      setAvailableItems(availableItems.map(item => 
+        item.id === itemId ? {...item, inCurrentLesson: false} : item
+      ));
+      
+      // Then make the API call
       const { error } = await supabase
         .from("lesson_item_associations")
         .delete()
@@ -372,6 +420,8 @@ export default function LessonsTable({
 
       if (error) {
         console.error("Error removing item association:", error.message);
+        // Revert the UI change if there was an error
+        setAvailableItems(originalItems);
         return null;
       }
 
@@ -387,6 +437,10 @@ export default function LessonsTable({
       
     } catch (err) {
       console.error("Error in removeItemAssociation:", err);
+      // If error occurred after UI update, we should fetch fresh data
+      if (selectedLessonId) {
+        fetchAvailableItems(selectedLessonId);
+      }
     } finally {
       setUpdating(null);
     }
@@ -711,52 +765,26 @@ export default function LessonsTable({
               onKeyDown={handleKeyDown}
               className="overflow-visible bg-transparent select-none">
               <div className="group border border-input dark:border-slate-700 rounded-md px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                <div className="flex flex-wrap gap-1">
-                  {selected.map((item) => {
-                    return (
-                      <Badge
-                        key={item.id}
-                        variant="secondary"
-                        className="text-md dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
-                        {item.id} - {item.title}
-                        <button
-                          className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              handleUnselect(item);
-                            }
-                          }}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          onClick={() => handleUnselect(item)}>
-                          <X className="h-3 w-3 text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-100" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                  <CommandPrimitive.Input
-                    ref={inputRef}
-                    value={inputValue}
-                    onValueChange={setInputValue}
-                    onBlur={() => setIsItemListOpen(false)}
-                    onFocus={() => setIsItemListOpen(true)}
-                    placeholder="Seleziona..."
-                    autoFocus={false}
-                    readOnly={true}
-                    onClick={() => {
-                      setIsItemListOpen(true);
-                      if (inputRef.current) {
-                        // Remove readonly attribute when clicked, but not on mobile/tablet
-                        if (window.innerWidth > 768) {
-                          inputRef.current.readOnly = false;
-                        }
+                <CommandPrimitive.Input
+                  ref={inputRef}
+                  value={inputValue}
+                  onValueChange={setInputValue}
+                  onBlur={() => setIsItemListOpen(false)}
+                  onFocus={() => setIsItemListOpen(true)}
+                  placeholder="Cerca argomenti..."
+                  autoFocus={false}
+                  readOnly={true}
+                  onClick={() => {
+                    setIsItemListOpen(true);
+                    if (inputRef.current) {
+                      // Remove readonly attribute when clicked, but not on mobile/tablet
+                      if (window.innerWidth > 768) {
+                        inputRef.current.readOnly = false;
                       }
-                    }}
-                    className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400 no-select no-keyboard-mobile"
-                  />
-                </div>
+                    }
+                  }}
+                  className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400 no-select no-keyboard-mobile"
+                />
               </div>
               <div className="relative mt-2">
                 <CommandList>
@@ -773,24 +801,21 @@ export default function LessonsTable({
                                 String(item.title)
                                   .toLowerCase()
                                   .includes(inputValue.toLowerCase()) &&
-                                item.completion_degree &&
-                                !selected.some((s) => s.id === item.id)
+                                item.inCurrentLesson
                             ) && (
                               <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-400 border-b dark:border-slate-700">
                                 Argomenti già assegnati in questa lezione
                               </div>
                             )}
 
-                            {/* Show items already assigned to THIS lesson */}
-                            {availableItems
-                              .filter(
+                            {/* Show items already assigned to THIS lesson, including selected items from the right */}
+                            {availableItems.filter(
                                 (item) =>
                                   item.title &&
                                   String(item.title)
                                     .toLowerCase()
                                     .includes(inputValue.toLowerCase()) &&
-                                  item.completion_degree &&
-                                  !selected.some((s) => s.id === item.id)
+                                  item.inCurrentLesson
                               )
                               .sort((a, b) => Number(a.id) - Number(b.id))
                               .map((item) => (
@@ -800,52 +825,65 @@ export default function LessonsTable({
                                     e.preventDefault();
                                     e.stopPropagation();
                                   }}
-                                  onSelect={async () => {
-                                    setInputValue("");
-                                    setSelected((prev) => [...prev, item]);
-                                    await associateItemToLesson(
-                                      selectedLessonId as string,
-                                      item.id
-                                    );
-                                  }}
                                   className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
                                   <div className="flex items-center w-full">
                                     <span>
                                       {item.id} - {item.title}
                                     </span>
-                                    {item.completion_degree && (
-                                      <Badge
-                                        className={clsx(
-                                          "ml-auto",
-                                          item.completion_degree === "Trained" &&
-                                            "bg-orange-500 dark:bg-orange-400",
-                                          item.completion_degree === "Mastered" &&
-                                            "bg-[#0d580d] dark:bg-green-500"
-                                        )}>
-                                        {item.completion_degree}
-                                      </Badge>
-                                    )}
+                                    <div className="ml-auto flex items-center gap-2">
+                                      {item.completion_degree && (
+                                        <Badge
+                                          className={clsx(
+                                            item.completion_degree === "Trained" &&
+                                              "bg-orange-500 dark:bg-orange-400",
+                                            item.completion_degree === "Mastered" &&
+                                              "bg-[#0d580d] dark:bg-green-500"
+                                          )}>
+                                          {item.completion_degree === "Trained" ? 'Visto' : ''}
+                                          {item.completion_degree === "Mastered" ? 'Capito' : ''}
+                                        </Badge>
+                                      )}
+                                      {/* Only show delete button if completion_degree is not "Mastered" */}
+                                      {item.completion_degree !== "Mastered" && (
+                                        <Badge
+                                          variant="outline"
+                                          className="cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (selectedLessonId) {
+                                              removeItemAssociation(
+                                                selectedLessonId,
+                                                item.id
+                                              );
+                                              // The removeItemAssociation function now updates the UI directly
+                                            }
+                                          }}>
+                                          <X className="h-3 w-3 font-black" />
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
                                 </CommandItem>
                               ))}
 
-                            {/* Add a divider and header for items with global completion status (but not in this lesson) */}
+                            {/* Add a divider and header for items with any status from other lessons */}
                             {availableItems.some(
                               (item) =>
                                 item.title &&
                                 String(item.title)
                                   .toLowerCase()
                                   .includes(inputValue.toLowerCase()) &&
-                                item.global_completion?.degree &&
-                                !item.completion_degree &&
+                                ((item.global_completion?.degree || 
+                                  item.global_completion?.lessonId) && // Include any items associated with other lessons
+                                 !item.completion_degree) &&
                                 !selected.some((s) => s.id === item.id)
                             ) && (
                               <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-400 border-t border-b dark:border-slate-700">
-                                Argomenti con stato in altre lezioni
+                                Argomenti presenti in altre lezioni
                               </div>
                             )}
 
-                            {/* Show items with global completion status but not in this lesson */}
+                            {/* Show items with any status from other lessons, WITH and WITHOUT completion degree */}
                             {availableItems
                               .filter(
                                 (item) =>
@@ -853,20 +891,31 @@ export default function LessonsTable({
                                   String(item.title)
                                     .toLowerCase()
                                     .includes(inputValue.toLowerCase()) &&
-                                  item.global_completion?.degree &&
-                                  !item.completion_degree &&
+                                  ((item.global_completion?.degree || 
+                                    item.global_completion?.lessonId) && // Include any items associated with other lessons
+                                   !item.completion_degree) &&
                                   !selected.some((s) => s.id === item.id)
                               )
                               .sort((a, b) => {
-                                // Sort by status (Mastered first, then Trained)
+                                // Sort by status (Mastered first, then Trained, then null)
                                 if (
-                                  a.global_completion?.degree === "Mastered" &&
+                                  a.global_completion?.degree === "Mastered" && 
                                   b.global_completion?.degree !== "Mastered"
                                 )
                                   return -1;
                                 if (
-                                  a.global_completion?.degree !== "Mastered" &&
+                                  a.global_completion?.degree !== "Mastered" && 
                                   b.global_completion?.degree === "Mastered"
+                                )
+                                  return 1;
+                                if (
+                                  a.global_completion?.degree === "Trained" && 
+                                  !b.global_completion?.degree
+                                )
+                                  return -1;
+                                if (
+                                  !a.global_completion?.degree && 
+                                  b.global_completion?.degree === "Trained"
                                 )
                                   return 1;
                                 // Then by ID
@@ -881,18 +930,18 @@ export default function LessonsTable({
                                   }}
                                   onSelect={async () => {
                                     setInputValue("");
-                                    setSelected((prev) => [...prev, item]);
                                     await associateItemToLesson(
                                       selectedLessonId as string,
                                       item.id
                                     );
+                                    // The associateItemToLesson function now updates the UI directly
                                   }}
                                   className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
                                   <div className="flex items-center w-full">
                                     <span>
                                       {item.id} - {item.title}
                                     </span>
-                                    {item.global_completion?.degree && (
+                                    {item.global_completion?.degree ? (
                                       <Badge
                                         className={clsx(
                                           "ml-auto",
@@ -903,7 +952,14 @@ export default function LessonsTable({
                                             "Mastered" &&
                                             "bg-[#0d580d] dark:bg-green-500"
                                         )}>
-                                        {item.global_completion.degree}
+                                        {item.global_completion.degree === 'Trained' ? 'Visto' : ' '}
+                                        {item.global_completion.degree === 'Mastered' ? 'Capito' : ' '}
+                                      </Badge>
+                                    ) : (
+                                      <Badge
+                                        variant="outline"
+                                        className="ml-auto text-xs">
+                                        In altra lezione
                                       </Badge>
                                     )}
                                   </div>
@@ -926,9 +982,9 @@ export default function LessonsTable({
                                   String(item.title)
                                     .toLowerCase()
                                     .includes(inputValue.toLowerCase()) &&
-                                  !item.completion_degree &&
+                                  !item.inCurrentLesson &&
                                   !item.global_completion?.degree &&
-                                  !selected.some((s) => s.id === item.id)
+                                  !item.global_completion?.lessonId
                               )
                               .sort((a, b) => Number(a.id) - Number(b.id))
                               .map((item) => {
@@ -941,11 +997,11 @@ export default function LessonsTable({
                                     }}
                                     onSelect={async (value) => {
                                       setInputValue("");
-                                      setSelected((prev) => [...prev, item]);
                                       await associateItemToLesson(
                                         selectedLessonId as string,
                                         item.id
                                       );
+                                      // The associateItemToLesson function now updates the UI directly
                                     }}
                                     className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
                                     {item.id} - {item.title}
