@@ -24,6 +24,7 @@ interface UpcomingLesson {
   profiles: {
     avatar_url: string;
     nome_utente: string;
+    profile_id: string;
   };
   processed_avatar_url?: string;
   isToday?: boolean;
@@ -193,11 +194,10 @@ export default function Home() {
   const futureLessons = upcomingLessons.filter((lesson) => !lesson.isToday);
 
   return (
-    <div className="container flex flex-row justify-between mx-auto py-2 space-y-6">
+    <div className="container py-2 space-y-6">
       {user ? (
         isAdmin ? (
-          <>
-            <Card className="w-1/2 dark:border-slate-700 dark:bg-slate-900">
+            <Card className="dark:border-slate-700 dark:bg-slate-900">
               <CardHeader>
                 <h1 className="text-2xl font-bold tracking-tight dark:text-slate-100">
                   Prossime lezioni
@@ -216,16 +216,16 @@ export default function Home() {
                     <TableHeader>
                       <TableRow className="dark:border-slate-700">
                         <TableHead className="dark:text-slate-100">
-                          Student
+                          Studente
                         </TableHead>
                         <TableHead className="dark:text-slate-100">
-                          Date
+                          Data
                         </TableHead>
                         <TableHead className="dark:text-slate-100">
-                          Time
+                          Ora
                         </TableHead>
                         <TableHead className="text-right dark:text-slate-100">
-                          Actions
+                          
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -369,7 +369,6 @@ export default function Home() {
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                   </svg>
-                                  Modifica
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -385,7 +384,6 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
-          </>
         ) : (
           <Card className="w-full">
             <CardContent className="flex flex-col items-center p-6">

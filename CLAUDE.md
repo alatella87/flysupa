@@ -15,10 +15,27 @@
 - Path aliases: import from '@/components', '@/lib/utils', etc.
 - UI components use shadcn/ui style (see components/ui)
 - Component naming: PascalCase for components, camelCase for functions/variables
-- Form validation: Uses react-hook-form with zod resolvers
+- Form validation: Uses react-hook-form with zod resolversA
 
 ## Project Structure
 - Components use shadcn/ui patterns and Tailwind CSS
 - Authentication via Supabase
-- UI state management through React context (UserContext)
-- Follow existing import ordering: React, libraries, local components
+- UI state management through React context (UserContext)w
+- Follow existing import ordering: React, libraries, local component
+
+ ## Features
+ 
+Qualifies:
+  4.    Enhanced student dashboard views
+  7.    Search and filtering capabilities
+  8.    Calendar view for lesson scheduling
+  11.   Upload Licence  
+  10.   Lesson template system
+
+Maybe Later
+  1.    Admin Dashboard implementation
+  2.    License management functionality
+  3.    Student progress analytics
+  5.    Report/certificate generation
+  6.    Notification syste
+  9.    Payment processing integration

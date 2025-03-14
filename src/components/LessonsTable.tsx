@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { useState } from "react";
@@ -50,6 +50,7 @@ export default function LessonsTable({
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isItemListOpen, setIsItemListOpen] = useState(false);
+  const [selected, setSelected] = useState<LessonItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Toggle row expansion
@@ -58,6 +59,65 @@ export default function LessonsTable({
       ...prev,
       [lessonId]: !prev[lessonId]
     }));
+  };
+  
+  // Handle key events in the command input
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const input = inputRef.current;
+      if (input) {
+        if (e.key === "Delete" || e.key === "Backspace") {
+          if (input.value === "") {
+            setSelected((prev) => {
+              const newSelected = [...prev];
+              newSelected.pop();
+              return newSelected;
+            });
+          }
+        }
+        if (e.key === "Escape") {
+          input.blur();
+        }
+      }
+    },
+    []
+  );
+  
+  // Handle removal of selected items
+  const handleUnselect = useCallback(
+    async (item: LessonItem) => {
+      // Update UI immediately for better UX
+      setSelected((prev) => prev.filter((s) => s.id !== item.id));
+
+      // Remove the association from the database
+      if (selectedLessonId) {
+        await removeItemAssociation(selectedLessonId, item.id);
+      }
+    },
+    [selectedLessonId]
+  );
+  
+  // Function to fetch existing associations for this lesson
+  const fetchExistingAssociations = async (lessonId: string) => {
+    const { data, error } = await supabase
+      .from("lesson_item_associations")
+      .select("*, lessons_items!lesson_item_id(*)")
+      .eq("lesson_id", lessonId);
+
+    if (error) {
+      console.error("Error fetching existing associations:", error.message);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      // Extract the lesson items from the associations and set them as selected
+      const selectedItems = data.map(
+        (association) => association.lessons_items
+      );
+      setSelected(selectedItems);
+    } else {
+      setSelected([]);
+    }
   };
 
   // Fetch available lesson items with their completion status across all lessons
@@ -143,6 +203,7 @@ export default function LessonsTable({
   const openAddItemDialog = async (lessonId: string) => {
     setSelectedLessonId(lessonId);
     await fetchAvailableItems(lessonId);
+    await fetchExistingAssociations(lessonId);
     setIsAddItemOpen(true);
     
     // Reset input field and ensure it doesn't get focus when opened
@@ -333,12 +394,6 @@ export default function LessonsTable({
 
   return (
     <>
-      <Button
-        onClick={() => createLesson(id)}
-        className="p-2 mb-6 dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
-        variant={"secondary"}>
-        + Aggiungi Lezione
-      </Button>
       <Table>
         <TableCaption className="dark:text-slate-400">
           Lezioni registrate per {profile?.nome_utente}
@@ -573,7 +628,8 @@ export default function LessonsTable({
                           <Button
                             size="icon"
                             variant="outline"
-                            className="flex w-full items-center bg-muted p-2 rounded bg-gray-400 text-white dark:bg-slate-800 cursor-pointer transition-all"
+                            className="flex w-full items-center bg-muted p-2 rounded bg-gray-400 text-white
+                            dark:bg-white dark:text-black cursor-pointer transition-all"
                             onClick={(e) => {
                               e.stopPropagation();
                               openAddItemDialog(lesson.id);
@@ -637,229 +693,268 @@ export default function LessonsTable({
 
       {/* Add Item Dialog */}
       <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
-        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-700">
+        <DialogContent className="sm:max-w-4xl dark:bg-slate-900 dark:border-slate-700">
           <DialogHeader>
             <DialogTitle className="dark:text-slate-100">
-              Aggiungi Argomento
+              Aggiungi Argomenti
             </DialogTitle>
             <DialogDescription className="dark:text-slate-400">
-              Seleziona un argomento da aggiungere alla lezione.
+              Seleziona uno o più argomenti da aggiungere alla lezione.
               <span className="block mt-1 text-amber-500 dark:text-amber-400 text-sm">
-                Gli argomenti già "Trained" (arancione) o "Mastered" (verde)
-                sono mostrati in una sezione dedicata.
+                Gli argomenti già "Trained" (arancione) o "Mastered" (verde) sono mostrati nell'area sinistra.
               </span>
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-4">
-            <Command className="overflow-visible bg-transparent">
+            <Command
+              onKeyDown={handleKeyDown}
+              className="overflow-visible bg-transparent select-none">
               <div className="group border border-input dark:border-slate-700 rounded-md px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                <CommandPrimitive.Input
-                  ref={inputRef}
-                  value={inputValue}
-                  onValueChange={setInputValue}
-                  onBlur={() => setIsItemListOpen(false)}
-                  onFocus={() => setIsItemListOpen(true)}
-                  placeholder="Cerca..."
-                  readOnly={true}
-                  onClick={() => {
-                    setIsItemListOpen(true);
-                    if (inputRef.current) {
-                      // Remove readonly attribute when clicked, but not on mobile/tablet
-                      if (window.innerWidth > 768) {
-                        inputRef.current.readOnly = false;
+                <div className="flex flex-wrap gap-1">
+                  {selected.map((item) => {
+                    return (
+                      <Badge
+                        key={item.id}
+                        variant="secondary"
+                        className="text-md dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                        {item.id} - {item.title}
+                        <button
+                          className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleUnselect(item);
+                            }
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onClick={() => handleUnselect(item)}>
+                          <X className="h-3 w-3 text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-100" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                  <CommandPrimitive.Input
+                    ref={inputRef}
+                    value={inputValue}
+                    onValueChange={setInputValue}
+                    onBlur={() => setIsItemListOpen(false)}
+                    onFocus={() => setIsItemListOpen(true)}
+                    placeholder="Seleziona..."
+                    autoFocus={false}
+                    readOnly={true}
+                    onClick={() => {
+                      setIsItemListOpen(true);
+                      if (inputRef.current) {
+                        // Remove readonly attribute when clicked, but not on mobile/tablet
+                        if (window.innerWidth > 768) {
+                          inputRef.current.readOnly = false;
+                        }
                       }
-                    }
-                  }}
-                  className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400 no-select no-keyboard-mobile"
-                />
+                    }}
+                    className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400 no-select no-keyboard-mobile"
+                  />
+                </div>
               </div>
               <div className="relative mt-2">
                 <CommandList>
                   {isItemListOpen && availableItems.length > 0 ? (
                     <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-slate-900 text-popover-foreground shadow-md outline-none animate-in">
-                      <CommandGroup className="h-[250px] overflow-auto">
-                        {/* Show normal unassigned items first */}
-                        {availableItems
-                          .filter(
-                            (item) =>
-                              item.title &&
-                              String(item.title)
-                                .toLowerCase()
-                                .includes(inputValue.toLowerCase()) &&
-                              !item.completion_degree &&
-                              !item.global_completion?.degree
-                          )
-                          .sort((a, b) => Number(a.id) - Number(b.id))
-                          .map((item) => (
-                            <CommandItem
-                              key={item.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onSelect={async () => {
-                                setInputValue("");
-                                if (selectedLessonId) {
-                                  await associateItemToLesson(
-                                    selectedLessonId,
-                                    item.id
-                                  );
-                                  setIsAddItemOpen(false); // Close dialog after adding
-                                }
-                              }}
-                              className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
-                              <div className="flex items-center w-full">
-                                <span>
-                                  {item.id} - {item.title}
-                                </span>
+                      <div className="flex divide-x dark:divide-slate-700">
+                        {/* LEFT COLUMN - Items with completion status */}
+                        <div className="w-1/2">
+                          <CommandGroup className="h-[350px] overflow-auto select-none">
+                            {/* Add a header for items already assigned to THIS lesson */}
+                            {availableItems.some(
+                              (item) =>
+                                item.title &&
+                                String(item.title)
+                                  .toLowerCase()
+                                  .includes(inputValue.toLowerCase()) &&
+                                item.completion_degree &&
+                                !selected.some((s) => s.id === item.id)
+                            ) && (
+                              <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-400 border-b dark:border-slate-700">
+                                Argomenti già assegnati in questa lezione
                               </div>
-                            </CommandItem>
-                          ))}
+                            )}
 
-                        {/* Add a divider and header for items already assigned to THIS lesson */}
-                        {availableItems.some(
-                          (item) =>
-                            item.completion_degree &&
-                            String(item.title)
-                              .toLowerCase()
-                              .includes(inputValue.toLowerCase())
-                        ) && (
-                          <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-500 border-t dark:border-slate-700">
-                            Argomenti già assegnati in questa lezione
-                          </div>
-                        )}
+                            {/* Show items already assigned to THIS lesson */}
+                            {availableItems
+                              .filter(
+                                (item) =>
+                                  item.title &&
+                                  String(item.title)
+                                    .toLowerCase()
+                                    .includes(inputValue.toLowerCase()) &&
+                                  item.completion_degree &&
+                                  !selected.some((s) => s.id === item.id)
+                              )
+                              .sort((a, b) => Number(a.id) - Number(b.id))
+                              .map((item) => (
+                                <CommandItem
+                                  key={item.id}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onSelect={async () => {
+                                    setInputValue("");
+                                    setSelected((prev) => [...prev, item]);
+                                    await associateItemToLesson(
+                                      selectedLessonId as string,
+                                      item.id
+                                    );
+                                  }}
+                                  className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
+                                  <div className="flex items-center w-full">
+                                    <span>
+                                      {item.id} - {item.title}
+                                    </span>
+                                    {item.completion_degree && (
+                                      <Badge
+                                        className={clsx(
+                                          "ml-auto",
+                                          item.completion_degree === "Trained" &&
+                                            "bg-orange-500 dark:bg-orange-400",
+                                          item.completion_degree === "Mastered" &&
+                                            "bg-[#0d580d] dark:bg-green-500"
+                                        )}>
+                                        {item.completion_degree}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
 
-                        {/* Show items already assigned to THIS lesson */}
-                        {availableItems
-                          .filter(
-                            (item) =>
-                              item.title &&
-                              String(item.title)
-                                .toLowerCase()
-                                .includes(inputValue.toLowerCase()) &&
-                              item.completion_degree
-                          )
-                          .sort((a, b) => Number(a.id) - Number(b.id))
-                          .map((item) => (
-                            <CommandItem
-                              key={item.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onSelect={async () => {
-                                setInputValue("");
-                                if (selectedLessonId) {
-                                  await associateItemToLesson(
-                                    selectedLessonId,
-                                    item.id
-                                  );
-                                  setIsAddItemOpen(false); // Close dialog after adding
-                                }
-                              }}
-                              className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
-                              <div className="flex items-center w-full">
-                                <span>
-                                  {item.id} - {item.title}
-                                </span>
-                                {item.completion_degree && (
-                                  <Badge
-                                    className={clsx(
-                                      "ml-auto",
-                                      item.completion_degree === "Trained" &&
-                                        "bg-orange-500 dark:bg-orange-400",
-                                      item.completion_degree === "Mastered" &&
-                                        "bg-[#0d580d] dark:bg-green-500"
-                                    )}>
-                                    {item.completion_degree}
-                                  </Badge>
-                                )}
+                            {/* Add a divider and header for items with global completion status (but not in this lesson) */}
+                            {availableItems.some(
+                              (item) =>
+                                item.title &&
+                                String(item.title)
+                                  .toLowerCase()
+                                  .includes(inputValue.toLowerCase()) &&
+                                item.global_completion?.degree &&
+                                !item.completion_degree &&
+                                !selected.some((s) => s.id === item.id)
+                            ) && (
+                              <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-400 border-t border-b dark:border-slate-700">
+                                Argomenti con stato in altre lezioni
                               </div>
-                            </CommandItem>
-                          ))}
+                            )}
 
-                        {/* Add a divider and header for items with global completion status (but not in this lesson) */}
-                        {availableItems.some(
-                          (item) =>
-                            item.title &&
-                            String(item.title)
-                              .toLowerCase()
-                              .includes(inputValue.toLowerCase()) &&
-                            item.global_completion?.degree &&
-                            !item.completion_degree
-                        ) && (
-                          <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-500 border-t dark:border-slate-700">
-                            Argomenti con stato in altre lezioni
-                          </div>
-                        )}
-
-                        {/* Show items with global completion status but not in this lesson */}
-                        {availableItems
-                          .filter(
-                            (item) =>
-                              item.title &&
-                              String(item.title)
-                                .toLowerCase()
-                                .includes(inputValue.toLowerCase()) &&
-                              item.global_completion?.degree &&
-                              !item.completion_degree
-                          )
-                          .sort((a, b) => {
-                            // Sort by status (Mastered first, then Trained)
-                            if (
-                              a.global_completion?.degree === "Mastered" &&
-                              b.global_completion?.degree !== "Mastered"
-                            )
-                              return -1;
-                            if (
-                              a.global_completion?.degree !== "Mastered" &&
-                              b.global_completion?.degree === "Mastered"
-                            )
-                              return 1;
-                            // Then by ID
-                            return Number(a.id) - Number(b.id);
-                          })
-                          .map((item) => (
-                            <CommandItem
-                              key={item.id}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onSelect={async () => {
-                                setInputValue("");
-                                if (selectedLessonId) {
-                                  await associateItemToLesson(
-                                    selectedLessonId,
-                                    item.id
-                                  );
-                                  setIsAddItemOpen(false); // Close dialog after adding
-                                }
-                              }}
-                              className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800">
-                              <div className="flex items-center w-full">
-                                <span>
-                                  {item.id} - {item.title}
-                                </span>
-                                {item.global_completion?.degree && (
-                                  <Badge
-                                    className={clsx(
-                                      "ml-auto",
-                                      item.global_completion.degree ===
-                                        "Trained" &&
-                                        "bg-orange-500 dark:bg-orange-400",
-                                      item.global_completion.degree ===
-                                        "Mastered" &&
-                                        "bg-[#0d580d] dark:bg-green-500"
-                                    )}>
-                                    {item.global_completion.degree}
-                                  </Badge>
-                                )}
-                              </div>
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
+                            {/* Show items with global completion status but not in this lesson */}
+                            {availableItems
+                              .filter(
+                                (item) =>
+                                  item.title &&
+                                  String(item.title)
+                                    .toLowerCase()
+                                    .includes(inputValue.toLowerCase()) &&
+                                  item.global_completion?.degree &&
+                                  !item.completion_degree &&
+                                  !selected.some((s) => s.id === item.id)
+                              )
+                              .sort((a, b) => {
+                                // Sort by status (Mastered first, then Trained)
+                                if (
+                                  a.global_completion?.degree === "Mastered" &&
+                                  b.global_completion?.degree !== "Mastered"
+                                )
+                                  return -1;
+                                if (
+                                  a.global_completion?.degree !== "Mastered" &&
+                                  b.global_completion?.degree === "Mastered"
+                                )
+                                  return 1;
+                                // Then by ID
+                                return Number(a.id) - Number(b.id);
+                              })
+                              .map((item) => (
+                                <CommandItem
+                                  key={item.id}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onSelect={async () => {
+                                    setInputValue("");
+                                    setSelected((prev) => [...prev, item]);
+                                    await associateItemToLesson(
+                                      selectedLessonId as string,
+                                      item.id
+                                    );
+                                  }}
+                                  className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
+                                  <div className="flex items-center w-full">
+                                    <span>
+                                      {item.id} - {item.title}
+                                    </span>
+                                    {item.global_completion?.degree && (
+                                      <Badge
+                                        className={clsx(
+                                          "ml-auto",
+                                          item.global_completion.degree ===
+                                            "Trained" &&
+                                            "bg-orange-500 dark:bg-orange-400",
+                                          item.global_completion.degree ===
+                                            "Mastered" &&
+                                            "bg-[#0d580d] dark:bg-green-500"
+                                        )}>
+                                        {item.global_completion.degree}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </div>
+                        
+                        {/* RIGHT COLUMN - Only unassigned items (no completion status) */}
+                        <div className="w-1/2">
+                          <CommandGroup className="h-[350px] overflow-auto select-none">
+                            <div className="py-2 px-2 text-xs font-medium text-muted-foreground dark:text-slate-400 border-b dark:border-slate-700">
+                              Argomenti disponibili senza stato
+                            </div>
+                            
+                            {availableItems
+                              .filter(
+                                (item) => 
+                                  item.title &&
+                                  String(item.title)
+                                    .toLowerCase()
+                                    .includes(inputValue.toLowerCase()) &&
+                                  !item.completion_degree &&
+                                  !item.global_completion?.degree &&
+                                  !selected.some((s) => s.id === item.id)
+                              )
+                              .sort((a, b) => Number(a.id) - Number(b.id))
+                              .map((item) => {
+                                return (
+                                  <CommandItem
+                                    key={item.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    onSelect={async (value) => {
+                                      setInputValue("");
+                                      setSelected((prev) => [...prev, item]);
+                                      await associateItemToLesson(
+                                        selectedLessonId as string,
+                                        item.id
+                                      );
+                                    }}
+                                    className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
+                                    {item.id} - {item.title}
+                                  </CommandItem>
+                                );
+                              })}
+                          </CommandGroup>
+                        </div>
+                      </div>
                     </div>
                   ) : null}
                 </CommandList>
@@ -873,7 +968,7 @@ export default function LessonsTable({
               variant="outline"
               onClick={() => setIsAddItemOpen(false)}
               className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
-              Annulla
+              Chiudi
             </Button>
           </DialogFooter>
         </DialogContent>

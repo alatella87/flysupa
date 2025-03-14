@@ -93,12 +93,12 @@ export default function Users() {
     },
     {
       accessorKey: "total_hours",
-      header: "Ore",
+      header: "Lez.",
       cell: ({ row }) => {
         const hours = row.original.total_hours;
         if (hours === 0) return null;
         return (
-          <div className="flex justify-center items-center">
+          <div className="flex items-left">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-black dark:border-slate-600 text-gray dark:text-slate-100">
               {hours}
             </span>
@@ -108,7 +108,7 @@ export default function Users() {
     },
     {
       accessorKey: "licenza_date",
-      header: "LAC",
+      header: "Licenza",
       cell: ({ row }) => (
         <span className="dark:text-slate-100">
           {formatDate(row.original.licenza_date || '')}
@@ -117,7 +117,7 @@ export default function Users() {
     },
     {
       accessorKey: "days_difference",
-      header: "scade",
+      header: "Scade",
       cell: ({ row }) => {
         const profile = row.original;
         if (!profile.licenza_date) return (

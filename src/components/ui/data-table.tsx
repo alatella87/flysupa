@@ -21,6 +21,8 @@ import {
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -40,7 +42,7 @@ export function DataTable<TData, TValue>({
   ])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
-
+  const navigate = useNavigate();
   const table = useReactTable({
     data,
     columns: columns.map(column => ({
@@ -124,11 +126,12 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => navigate(`/user-edit/${row.original.id}`)}
                   className="dark:border-slate-700">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="dark:text-slate-100 text-base">
+                      className="dark:text-slate-100 text-base cursor-pointer">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
