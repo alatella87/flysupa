@@ -26,10 +26,85 @@ import Avatar from "@/components/Avatar";
 // Custom Components
 import LessonsTable, { NoLessons, LoadingLessons } from "./LessonsTable";
 
+// Import Dialog components
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+// License Thumbnail Component
+function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
+  return (
+    <div className="relative flex items-center justify-center w-full h-28 bg-slate-200 dark:bg-slate-800 rounded-md overflow-hidden">
+      {licenseUrl ? (
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="w-full h-full relative group cursor-pointer">
+              <img 
+                src={licenseUrl} 
+                alt="Driving License" 
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="text-slate-700 dark:text-slate-200"
+                >
+                  <path d="m15 3 6 6m-6-6v6h6"></path>
+                  <path d="M10 21H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+                  <path d="M21 13v8"></path>
+                  <path d="M18 16h6"></path>
+                </svg>
+              </div>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex items-center justify-center">
+            <img 
+              src={licenseUrl} 
+              alt="Driving License" 
+              className="max-w-full max-h-[70vh] object-contain"
+            />
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect width="18" height="12" x="3" y="6" rx="2" />
+            <path d="M3 10h18" />
+            <path d="M7 15h.01" />
+            <path d="M11 15h2" />
+          </svg>
+          <span className="mt-1 text-sm">Nessuna licenza</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function UserEditForm() {
   const { id } = useParams<{ id: string }>(); // Get user ID from URL
   const { refetchTotalHours, downloadAndSetUserAvatar } = useUser(); // Add downloadAndSetUserAvatar
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [licenseUrl, setLicenseUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showConfirmAlert, setShowConfirmAlert] = useState(false);
   const [error, setError] = useState("");
@@ -74,7 +149,7 @@ export default function UserEditForm() {
 
     try {
       setLoading(true);
-      
+
       // Use Supabase client for consistency
       const { data, error } = await supabase
         .from("profiles")
@@ -91,10 +166,27 @@ export default function UserEditForm() {
 
         // Download and set avatar if available
         if (profileData.avatar_url) {
-          const avatarUrl = await downloadAndSetUserAvatar(profileData.avatar_url);
+          const avatarUrl = await downloadAndSetUserAvatar(
+            profileData.avatar_url
+          );
           profileData.full_avatar_url = avatarUrl;
         }
-        
+
+        // Download and set license if available
+        if (profileData.license_url) {
+          try {
+            const { data, error } = await supabase.storage
+              .from("licenses")
+              .download(profileData.license_url);
+
+            if (error) throw error;
+            const url = URL.createObjectURL(data);
+            setLicenseUrl(url);
+          } catch (error) {
+            console.error("Error downloading license image:", error);
+          }
+        }
+
         console.log("Fetched profile data:", profileData);
         setProfile(profileData);
       }
@@ -111,7 +203,9 @@ export default function UserEditForm() {
     try {
       setLoadingLessons(true);
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons?profile_id=eq.${id}&order=date.asc`,
+        `${
+          import.meta.env.VITE_SUPABASE_URL
+        }/rest/v1/lessons?profile_id=eq.${id}&order=date.asc`,
         {
           method: "GET",
           headers: {
@@ -131,7 +225,9 @@ export default function UserEditForm() {
       const detailedLessons = await Promise.all(
         lessonsData.map(async (lesson) => {
           const detailsResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lesson_item_details_view?lesson_id=eq.${lesson.id}`,
+            `${
+              import.meta.env.VITE_SUPABASE_URL
+            }/rest/v1/lesson_item_details_view?lesson_id=eq.${lesson.id}`,
             {
               method: "GET",
               headers: {
@@ -177,14 +273,14 @@ export default function UserEditForm() {
 
       // Define the fields we want to update
       const updatableFields = [
-        'nome_utente',
-        'phone',
-        'licenza_date',
-        'admin',
-        'sensibilizzazione',
-        'soccorritori'
+        "nome_utente",
+        "phone",
+        "licenza_date",
+        "admin",
+        "sensibilizzazione",
+        "soccorritori",
       ];
-      
+
       // Extract only the fields we want to update, filtering out undefined values
       const updates = updatableFields.reduce((acc, key) => {
         // Only include the field if it exists in the profile and is not undefined
@@ -193,12 +289,12 @@ export default function UserEditForm() {
         }
         return acc;
       }, {} as Record<string, any>);
-      
+
       // Add required fields for upsert
       const profileData = {
         ...updates,
         id, // Make sure ID is included
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       console.log("Updating profile with data:", profileData);
@@ -218,12 +314,14 @@ export default function UserEditForm() {
 
       // Refetch profile data to ensure UI is in sync
       await fetchProfile();
-      
+
       // Show success message
       setShowConfirmAlert(true);
     } catch (err: unknown) {
       console.error("Error in updateProfile:", err);
-      setError(err instanceof Error ? err.message : "Unknown error updating profile");
+      setError(
+        err instanceof Error ? err.message : "Unknown error updating profile"
+      );
     } finally {
       setLoading(false);
     }
@@ -258,7 +356,7 @@ export default function UserEditForm() {
       // Refetch lessons
       await fetchProfileLessons(id);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
@@ -284,7 +382,7 @@ export default function UserEditForm() {
       // Refetch lessons
       await fetchProfileLessons(profileId);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
@@ -300,7 +398,7 @@ export default function UserEditForm() {
     );
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="container px-[.8rem] py-4 space-y-6">
       {showConfirmAlert && (
         <div className="rounded-lg bg-green-100 dark:bg-green-900 p-4 text-green-700 dark:text-green-100 flex justify-between items-center">
           <p>Profilo aggiornato con successo!</p>
@@ -357,11 +455,13 @@ export default function UserEditForm() {
             <div className="grid gap-4">
               <div className="gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="dark:text-slate-100">Email</Label>
-                  <Input 
-                    id="email" 
-                    value={profile?.email || ""} 
-                    disabled 
+                  <Label htmlFor="email" className="dark:text-slate-100">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    value={profile?.email || ""}
+                    disabled
                     className="dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                   />
                 </div>
@@ -369,7 +469,9 @@ export default function UserEditForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="dark:text-slate-100">Telefono</Label>
+                  <Label htmlFor="phone" className="dark:text-slate-100">
+                    Telefono
+                  </Label>
                   <Input
                     id="phone"
                     value={profile?.phone || ""}
@@ -379,7 +481,9 @@ export default function UserEditForm() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nome_utente" className="dark:text-slate-100">Nome Completo</Label>
+                  <Label htmlFor="nome_utente" className="dark:text-slate-100">
+                    Nome Completo
+                  </Label>
                   <Input
                     id="nome_utente"
                     value={profile?.nome_utente || ""}
@@ -392,7 +496,9 @@ export default function UserEditForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="licenza_date" className="dark:text-slate-100">LAC</Label>
+                <Label htmlFor="licenza_date" className="dark:text-slate-100">
+                  LAC
+                </Label>
                 <Input
                   id="licenza_date"
                   type="date"
@@ -406,52 +512,75 @@ export default function UserEditForm() {
                   onChange={(e) =>
                     handleFieldChange("licenza_date", e.target.value)
                   }
-                  className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700"
+                  className="dark:bg-slate-800 text-white dark:text-slate-100 dark:border-slate-700"
                 />
               </div>
             </div>
 
-            {/* Checkboxes section */}
-            <div className="border rounded-lg p-4 space-y-4 dark:border-slate-700">
-              <h3 className="text-lg font-medium dark:text-slate-100">Status & Certificazioni</h3>
+            {/* Status and License row */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Checkboxes section */}
+              <div className="border rounded-lg p-4 space-y-4 flex-1 dark:border-slate-700">
+                <h3 className="text-lg font-medium dark:text-slate-100">
+                  Status & Certificazioni
+                </h3>
 
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    disabled={true}
-                    id="admin"
-                    checked={profile?.admin || false}
-                    onCheckedChange={(checked) =>
-                      handleFieldChange("admin", checked)
-                    }
-                    className="dark:border-slate-600"
-                  />
-                  <Label htmlFor="admin" className="dark:text-slate-100">Amministratore</Label>
-                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      disabled={true}
+                      id="admin"
+                      checked={profile?.admin || false}
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("admin", checked)
+                      }
+                      className="dark:border-slate-600"
+                    />
+                    <Label htmlFor="admin" className="dark:text-slate-100">
+                      Amministratore
+                    </Label>
+                  </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="sensibilizzazione"
-                    checked={profile?.sensibilizzazione || false}
-                    onCheckedChange={(checked) =>
-                      handleFieldChange("sensibilizzazione", checked)
-                    }
-                    className="dark:border-slate-600"
-                  />
-                  <Label htmlFor="sensibilizzazione" className="dark:text-slate-100">Sensibilizzazione</Label>
-                </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="sensibilizzazione"
+                      checked={profile?.sensibilizzazione || false}
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("sensibilizzazione", checked)
+                      }
+                      className="dark:border-slate-600"
+                    />
+                    <Label
+                      htmlFor="sensibilizzazione"
+                      className="dark:text-slate-100">
+                      Sensibilizzazione
+                    </Label>
+                  </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="soccorritori"
-                    checked={profile?.soccorritori || false}
-                    onCheckedChange={(checked) =>
-                      handleFieldChange("soccorritori", checked)
-                    }
-                    className="dark:border-slate-600"
-                  />
-                  <Label htmlFor="soccorritori" className="dark:text-slate-100">Soccorritori</Label>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="soccorritori"
+                      checked={profile?.soccorritori || false}
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("soccorritori", checked)
+                      }
+                      className="dark:border-slate-600"
+                    />
+                    <Label
+                      htmlFor="soccorritori"
+                      className="dark:text-slate-100">
+                      Soccorritori
+                    </Label>
+                  </div>
                 </div>
+              </div>
+
+              {/* License section */}
+              <div className="border rounded-lg p-4 space-y-2 flex-1 dark:border-slate-700">
+                <h3 className="text-lg font-medium dark:text-slate-100">
+                  Patente
+                </h3>
+                <LicenseThumbnail licenseUrl={licenseUrl} />
               </div>
             </div>
           </CardContent>

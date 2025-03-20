@@ -82,12 +82,6 @@ export default function EditLesson() {
   );
 
   async function fetchLessonById(id: any) {
-    const cachedData = localStorage.getItem(`lesson_${id}`);
-    if (cachedData) {
-      setLesson(JSON.parse(cachedData));
-      return;
-    }
-
     const { data, error } = await supabase
       .from("lessons")
       .select("*")
@@ -99,14 +93,11 @@ export default function EditLesson() {
       return null;
     }
 
-    localStorage.setItem(`lesson_${id}`, JSON.stringify(data));
     setLesson(data);
   }
 
   async function fetchAvailableItems() {
-    const { data, error } = await supabase
-    .from("lessons_items")
-    .select("*");
+    const { data, error } = await supabase.from("lessons_items").select("*");
 
     if (error) {
       console.error("Error fetching available items:", error.message);
@@ -174,7 +165,7 @@ export default function EditLesson() {
       setSelected(selectedItems);
     }
   }
-  
+
   async function fetchLessonsCount(lessonId: string) {
     // Step 1: Retrieve the profile_id from the lessons table
     const { data: lessonData, error: lessonError } = await supabase
@@ -201,27 +192,28 @@ export default function EditLesson() {
           "Total lessons assigned to the profile:",
           lessonsCountData.length
         );
-        setLessonsCount(lessonsCountData.length)
+        setLessonsCount(lessonsCountData.length);
       }
     }
   }
 
   async function fetchProfileFromLessonId(lessonId: string) {
-
     // API call to get the profile data linked to the specified lessonId
     const { data: profileData, error } = await supabase
-      .from('lessons')
-      .select(`
+      .from("lessons")
+      .select(
+        `
         profiles(*)
-      `)
-      .eq('id', lessonId)
+      `
+      )
+      .eq("id", lessonId)
       .single();
-    
+
     if (error) {
-      console.error('Error fetching profile data:', error);
+      console.error("Error fetching profile data:", error);
     } else {
       setProfile(profileData.profiles as any);
-      getAvatarUrl(profileData.profiles.avatar_url)
+      getAvatarUrl(profileData.profiles.avatar_url);
     }
   }
 
@@ -230,30 +222,29 @@ export default function EditLesson() {
       const { data, error } = await supabase.storage
         .from("avatars")
         .download(path);
-  
+
       if (error) throw error;
-  
+
       const url = URL.createObjectURL(data);
-      console.log('error', url)
+      console.log("error", url);
 
       setAvatarUrl(url);
     } catch (error) {
-      console.log('error', error)
+      console.log("error", error);
     }
   }
-
 
   // Add no-select class to body when component is active
   useEffect(() => {
     // Add the no-select class to prevent text selection in mobile
-    document.body.classList.add('no-select');
-    
+    document.body.classList.add("no-select");
+
     // Return cleanup function
     return () => {
-      document.body.classList.remove('no-select');
+      document.body.classList.remove("no-select");
     };
   }, []);
-  
+
   useEffect(() => {
     if (!id) return;
     fetchProfileFromLessonId(id);
@@ -267,13 +258,12 @@ export default function EditLesson() {
     <div className="container mx-auto py-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
             className="mr-2 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label="Go back"
-          >
+            aria-label="Go back">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-3xl font-bold tracking-tight dark:text-slate-100">
@@ -289,10 +279,10 @@ export default function EditLesson() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4">
-        <Card className="flex-0 min-w-[250px] dark:border-slate-700 dark:bg-slate-900">
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="dark:border-slate-700 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="dark:text-slate-100">Studente</CardTitle>
+            <CardTitle className="dark:text-slate-100">Utente</CardTitle>
             <CardDescription className="dark:text-slate-400">
               {/* {profile.nome_utente} */}
             </CardDescription>
@@ -303,13 +293,13 @@ export default function EditLesson() {
                 size="sm"
                 navbar={true}
                 userEditForm={true}
-                sourceUrl={avatarUrl}
+                sourceUrl={avatarUrl || undefined}
                 lessonsCount={lessonsCount || 0}
               />
             )}
           </CardContent>
         </Card>
-        <Card className="flex-0 min-w-[250px] dark:border-slate-700 dark:bg-slate-900">
+        <Card className="dark:border-slate-700 dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="dark:text-slate-100">Data</CardTitle>
             <CardDescription className="dark:text-slate-400">

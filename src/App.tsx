@@ -12,7 +12,7 @@ import Check from "./pages/Auth/Check";
 import Users from "./pages/Users";
 import Account from "./pages/Account";
 import Register from "./pages/Auth/Register";
-import UserEdit from "./pages/UserEdit";
+import UserEdit from "./components/UserEditForm";
 import EditLesson from "./pages/EditLesson";
 import ConfirmRegistration from "./pages/Auth/ConfirmRegistration";
 import Dashboard from "./pages/Dashboard";

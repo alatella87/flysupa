@@ -9,6 +9,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [nomeUtente, setNomeUtente] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [licenseUrl, setLicenseUrl] = useState<string | null>(null);
   const [totalHours, setTotalHours] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -61,7 +62,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("nome_utente, avatar_url, admin")
+          .select("nome_utente, avatar_url, license_url, admin")
           .eq("id", user.id)
           .single();
 
@@ -74,6 +75,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
         if (data?.avatar_url) {
           await downloadAndSetAvatar(data.avatar_url);
+        }
+        
+        if (data?.license_url) {
+          await downloadAndSetLicense(data.license_url);
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -113,7 +118,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'license' = 'avatar'): Promise<void> => {
     try {
       setUploading(true);
 
@@ -124,24 +129,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const file = event.target.files[0];
       const fileExt = file.name.split(".").pop();
       const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+      
+      // Determine bucket and field based on type
+      const bucket = type === 'license' ? 'licenses' : 'avatars';
+      const field = type === 'license' ? 'license_url' : 'avatar_url';
 
       const { error: uploadError } = await supabase.storage
-        .from("avatars")
+        .from(bucket)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
+      // Update the profile with the appropriate field
+      const updates = { [field]: filePath };
+      
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: filePath })
+        .update(updates)
         .eq("id", user?.id);
 
       if (updateError) throw updateError;
 
-      await downloadAndSetAvatar(filePath);
+      // Download and set the image in state
+      if (type === 'license') {
+        await downloadAndSetLicense(filePath);
+      } else {
+        await downloadAndSetAvatar(filePath);
+      }
     } catch (error) {
-      alert("Error uploading avatar!");
-      console.error("Error uploading avatar:", error);
+      alert(`Error uploading ${type}!`);
+      console.error(`Error uploading ${type}:`, error);
     } finally {
       setUploading(false);
     }
@@ -158,7 +175,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const url = URL.createObjectURL(data);
       setAvatarUrl(url);
     } catch (error) {
-      console.error("Error downloading image:", error);
+      console.error("Error downloading avatar image:", error);
+    }
+  };
+  
+  const downloadAndSetLicense = async (path: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("licenses")
+        .download(path);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      setLicenseUrl(url);
+    } catch (error) {
+      console.error("Error downloading license image:", error);
     }
   };
 
@@ -183,6 +215,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         loading,
         isAdmin,
         avatarUrl,
+        licenseUrl,
         totalHours,
         nomeUtente,
         setNomeUtente,

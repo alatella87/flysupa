@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 
 // User related interfaces
 export interface User {
+  nomeUtente: ReactNode;
   id: string;
   email: string;
   total_hours: number;
@@ -21,6 +22,7 @@ export interface Profile {
   licenza_date?: string;
   full_avatar_url?: string;
   avatar_url?: string;
+  license_url?: string;
   isAdmin?: boolean | null;
   username?: string | null;
   website?: string | null;
@@ -79,6 +81,7 @@ export interface UserContextType {
   email: string | null;
   nomeUtente: string | null;
   avatarUrl: string | null;
+  licenseUrl: string | null;
   totalHours: number | null;
   isAdmin: boolean | null;
 
@@ -97,7 +100,7 @@ export interface UserContextType {
   setShouldRedirect: (redirect: boolean) => void;
 
   // Async operations
-  uploadImage: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  uploadImage: (event: React.ChangeEvent<HTMLInputElement>, type?: 'avatar' | 'license') => Promise<void>;
   updateProfile: (profile: Profile) => Promise<void>;
   downloadAndSetUserAvatar: (path: string) => Promise<string | undefined>;
   refetchTotalHours: () => Promise<void>;

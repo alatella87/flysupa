@@ -26,11 +26,14 @@
  ## Features
  
 Qualifies:
-  4.    Enhanced student dashboard views
-  7.    Search and filtering capabilities
-  8.    Calendar view for lesson scheduling
+
   11.   Upload Licence  
+  7.    Search and filtering capabilities
+  12.   Usernames fix (nome/cognome insieme)
+
+  8.    Calendar view for lesson scheduling
   10.   Lesson template system
+  4.    Enhanced student dashboard views
 
 Maybe Later
   1.    Admin Dashboard implementation
