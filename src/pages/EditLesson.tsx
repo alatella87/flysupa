@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient.tsx";
 import { Lesson, LessonItem, Profile } from "@/types";
-import { DateTimePicker24h } from "@/components/DateTimerPicker.tsx";
 import { X, ArrowLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +24,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Avatar from "@/components/Avatar";
+import { Input } from "@/components/ui/input.tsx";
+import ExpandableButton from "@/components/ui/expandable-button.tsx";
 
 export default function EditLesson() {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +36,7 @@ export default function EditLesson() {
 
   const [lessonsCount, setLessonsCount] = useState<number>(0);
   const [lesson, setLesson] = useState<Lesson>();
-  
+
   const [profile, setProfile] = useState<Profile>();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -46,6 +47,8 @@ export default function EditLesson() {
   const [inputValue, setInputValue] = useState("");
 
   const [open, setOpen] = useState(false);
+
+  const [amountHours, setAmoutHours] = useState(1);
 
   const handleUnselect = useCallback(
     async (item: LessonItem) => {
@@ -92,7 +95,6 @@ export default function EditLesson() {
       console.error("Error fetching lesson:", error.message);
       return null;
     }
-
     setLesson(data);
   }
 
@@ -279,136 +281,187 @@ export default function EditLesson() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <Card className="dark:border-slate-700 dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle className="dark:text-slate-100">Utente</CardTitle>
-            <CardDescription className="dark:text-slate-400">
-              {/* {profile.nome_utente} */}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {profile && (
-              <Avatar
-                size="sm"
-                navbar={true}
-                userEditForm={true}
-                sourceUrl={avatarUrl || undefined}
-                lessonsCount={lessonsCount || 0}
-              />
-            )}
-          </CardContent>
-        </Card>
-        <Card className="dark:border-slate-700 dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle className="dark:text-slate-100">Data</CardTitle>
-            <CardDescription className="dark:text-slate-400">
-              Data della lezione
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DateTimePicker24h lessonId={lesson?.id as string} />
+          <CardHeader />
+          <CardContent className="mb-4">
+            <div className="flex flex-row items-center justify-between">
+              {/* Section 1: Avatar and User info */}
+              <div className="flex items-center gap-3">
+                {profile && (
+                  <Avatar
+                    size="sm"
+                    lessonsCount={lessonsCount}
+                    navbar={true}
+                    userEditForm={true}
+                    sourceUrl={avatarUrl || undefined}
+                  />
+                )}
+                <div className="flex flex-col ml-8">
+                  <span className="font-medium dark:text-slate-100">
+                    Utente
+                  </span>
+                  <span className="text-sm dark:text-slate-300">
+                    {profile?.nome_utente || "N/A"}
+                  </span>
+                  <div className="mt-1"></div>
+                  <Badge
+                    className={
+                      profile?.sensibilizzazione
+                        ? "bg-[#aefa1f]"
+                        : "bg-gray-400"
+                    }
+                    variant={
+                      profile?.sensibilizzazione ? undefined : "outline"
+                    }>
+                    {profile?.sensibilizzazione
+                      ? "Sensibilizzazione"
+                      : "No Sensibilizzazione"}
+                  </Badge>
+                  <div className="mt-1"></div>
+                  <Badge
+                    className={
+                      profile?.soccorritori ? "bg-[#aefa1f]" : "bg-gray-400"
+                    }
+                    variant={profile?.soccorritori ? undefined : "outline"}>
+                    {profile?.soccorritori ? "Soccorritore" : "No Soccorritore"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Section 2: Status badges */}
+              <div className="flex flex-col items-center "></div>
+              {/* Section 3: Lesson count */}
+              <div className="flex flex-col items-center mr-12">
+                <span className="text-3xl font-bold dark:text-slate-100">
+                  {lessonsCount || 0}
+                </span>
+                <span className="text-xs dark:text-slate-400">
+                  Lezioni totali
+                </span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="flex-1 min-w-[250px] dark:border-slate-700 dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle className="dark:text-slate-100">Contenuto</CardTitle>
-            <CardDescription className="dark:text-slate-400">
-              Temi e argomenti
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Command
-              onKeyDown={handleKeyDown}
-              className="overflow-visible bg-transparent select-none">
-              <div className="group border border-input dark:border-slate-700 rounded-md px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                <div className="flex flex-wrap gap-1">
-                  {selected.map((item) => {
-                    return (
-                      <Badge
-                        key={item.id}
-                        variant="secondary"
-                        className="text-md dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
-                        {item.id} - {item.title}
-                        <button
-                          className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              handleUnselect(item);
-                            }
-                          }}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          onClick={() => handleUnselect(item)}>
-                          <X className="h-3 w-3 text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-100" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                  <CommandPrimitive.Input
-                    ref={inputRef}
-                    value={inputValue}
-                    onValueChange={setInputValue}
-                    onBlur={() => setOpen(false)}
-                    onFocus={() => setOpen(true)}
-                    placeholder="Seleziona..."
-                    autoFocus={false}
-                    readOnly={true}
-                    onClick={() => {
-                      setOpen(true);
-                      if (inputRef.current) {
-                        // Remove readonly attribute when clicked, but not on mobile/tablet
-                        if (window.innerWidth > 768) {
-                          inputRef.current.readOnly = false;
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="dark:border-slate-700 dark:bg-slate-900">
+            <CardHeader>
+              <CardTitle className="dark:text-slate-100">Data</CardTitle>
+              <CardDescription className="dark:text-slate-400">
+                Data e durata della lezione
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-row justify-start">
+              <ExpandableButton
+                lesson={lesson}
+                lessonId={lesson?.id}
+                profileId={profile?.id}
+                expanded={true}
+                refetch={fetchLessonById}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="dark:border-slate-700 dark:bg-slate-900">
+            <CardHeader>
+              <CardTitle className="dark:text-slate-100">Contenuto</CardTitle>
+              <CardDescription className="dark:text-slate-400">
+                Temi e argomenti
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Command
+                onKeyDown={handleKeyDown}
+                className="overflow-visible bg-transparent select-none">
+                <div className="group border border-input dark:border-slate-700 rounded-md px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                  <div className="flex flex-wrap gap-1">
+                    {selected.map((item) => {
+                      return (
+                        <Badge
+                          key={item.id}
+                          variant="secondary"
+                          className="text-md dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                          {item.id} - {item.title}
+                          <button
+                            className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleUnselect(item);
+                              }
+                            }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            onClick={() => handleUnselect(item)}>
+                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-100" />
+                          </button>
+                        </Badge>
+                      );
+                    })}
+                    <CommandPrimitive.Input
+                      ref={inputRef}
+                      value={inputValue}
+                      onValueChange={setInputValue}
+                      onBlur={() => setOpen(false)}
+                      onFocus={() => setOpen(true)}
+                      placeholder="Seleziona..."
+                      autoFocus={false}
+                      readOnly={true}
+                      onClick={() => {
+                        setOpen(true);
+                        if (inputRef.current) {
+                          // Remove readonly attribute when clicked, but not on mobile/tablet
+                          if (window.innerWidth > 768) {
+                            inputRef.current.readOnly = false;
+                          }
                         }
-                      }
-                    }}
-                    className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400 no-select no-keyboard-mobile"
-                  />
+                      }}
+                      className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground dark:text-slate-100 dark:placeholder:text-slate-400 no-select no-keyboard-mobile"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="relative mt-2">
-                <CommandList>
-                  {open && availableItems.length > 0 ? (
-                    <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-slate-900 text-popover-foreground shadow-md outline-none animate-in">
-                      <CommandGroup className="h-[250px] overflow-auto select-none">
-                        {availableItems
-                          .filter(
-                            (item) => !selected.some((s) => s.id === item.id)
-                          )
-                          .sort((a, b) => a.id - b.id)
-                          .map((item) => {
-                            return (
-                              <CommandItem
-                                key={item.id}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                }}
-                                onSelect={async (value) => {
-                                  setInputValue("");
-                                  setSelected((prev) => [...prev, item]);
-                                  await associateItemToLesson(
-                                    lesson?.id as string,
-                                    item.id
-                                  );
-                                }}
-                                className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
-                                {item.id} - {item.title}
-                              </CommandItem>
-                            );
-                          })}
-                      </CommandGroup>
-                    </div>
-                  ) : null}
-                </CommandList>
-              </div>
-            </Command>
-          </CardContent>
-        </Card>
+                <div className="relative mt-2">
+                  <CommandList>
+                    {open && availableItems.length > 0 ? (
+                      <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-slate-900 text-popover-foreground shadow-md outline-none animate-in">
+                        <CommandGroup className="h-[250px] overflow-auto select-none">
+                          {availableItems
+                            .filter(
+                              (item) => !selected.some((s) => s.id === item.id)
+                            )
+                            .sort((a, b) => a.id - b.id)
+                            .map((item) => {
+                              return (
+                                <CommandItem
+                                  key={item.id}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onSelect={async (value) => {
+                                    setInputValue("");
+                                    setSelected((prev) => [...prev, item]);
+                                    await associateItemToLesson(
+                                      lesson?.id as string,
+                                      item.id
+                                    );
+                                  }}
+                                  className="cursor-pointer dark:text-slate-100 dark:hover:bg-slate-800 dark:aria-selected:bg-slate-800 select-none">
+                                  {item.id} - {item.title}
+                                </CommandItem>
+                              );
+                            })}
+                        </CommandGroup>
+                      </div>
+                    ) : null}
+                  </CommandList>
+                </div>
+              </Command>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

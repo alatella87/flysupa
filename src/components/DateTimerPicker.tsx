@@ -15,19 +15,33 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-interface DateTimePicker24hProps {
+interface DateTimePickerProps {
   lessonId?: string;
   date?: Date;
   setDate?: (date: Date) => void;
   onDateTimeSelect?: (date: Date) => void;
 }
 
-export function DateTimePicker24h({
+/**
+ * This component represents a date and time picker.
+ * It allows the user to select a date and time,
+ * and provides options for updating the selected date and time.
+ *
+ * The selected date and time can be controlled externally
+ * by providing the `date` and `setDate` props.
+ *
+ * If a `lessonId` is provided, the component will update the
+ * corresponding lesson in the database when the date or time is changed.
+ * If an `onDateTimeSelect` callback is provided,
+ * it will be called when a date and time are selected.
+ */
+
+export function DateTimePicker({
   lessonId,
   date: externalDate,
   setDate: setExternalDate,
   onDateTimeSelect,
-}: DateTimePicker24hProps) {
+}: DateTimePickerProps) {
   const [date, setInternalDate] = React.useState<Date | undefined>(
     externalDate
   );

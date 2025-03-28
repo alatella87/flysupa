@@ -36,6 +36,15 @@ import {
 import { Command as CommandPrimitive } from "cmdk";
 import { ChevronDown, ChevronRight, X, Plus } from "lucide-react";
 
+/**
+ * Renders a table of lessons.
+ *
+ * @param profile - The profile object.
+ * @param lessons - The array of lessons.
+ * @param deleteLesson - The function to delete a lesson.
+ * @param refetchLessons - The function to refetch lessons.
+ */
+
 export default function LessonsTable({
   profile,
   lessons,
@@ -664,7 +673,7 @@ export default function LessonsTable({
                     <Badge
                       variant={"outline"}
                       className="dark:border-slate-600 dark:text-slate-100">
-                      {lesson.amount_hours}
+                      {lesson.amount_hours}h
                     </Badge>
                   </TableCell>
 

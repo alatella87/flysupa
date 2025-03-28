@@ -34,12 +34,12 @@ export interface Profile {
 export interface Lesson {
   id: string;
   date: string;
+  time: string;
   amount_hours: number;
   created_at: string;
-  content: string;
   profile_id: string;
-  title: string;
-  details?: any[];
+  title?: string;
+  description?: string;
 }
 
 export interface LessonItem {

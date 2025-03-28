@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface UpcomingLesson {
   amount_hours: number;
@@ -280,49 +281,60 @@ export default function Home() {
               ) : upcomingLessons.length > 0 ? (
                 <Table>
                   <TableCaption className="dark:text-slate-400">
-                    <div className="flex justify-between items-center">
-                      <Button
-                        variant="outline"
-                        disabled={currentPage === 0}
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
-                        Precedenti
-                      </Button>
+                    {totalPages > 1 ? (
+                      <div className="flex justify-between items-center">
+                        <Button
+                          variant="outline"
+                          disabled={currentPage === 0}
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
+                          Precedenti
+                        </Button>
 
-                      {/* Page numbers */}
-                      <div>
-                        {pageNumbers.map((page, index) => (
-                          <Button
-                            key={index}
-                            className="mx-1"
-                            variant={
-                              page === "..."
-                                ? "ghost"
-                                : currentPage + 1 === page
-                                ? "default"
-                                : "outline"
-                            }
-                            disabled={page === "..."}
-                            onClick={() => {
-                              if (typeof page === "number") {
-                                setCurrentPage(page - 1);
+                        {/* Page numbers */}
+                        <div>
+                          {pageNumbers.map((page, index) => (
+                            <Button
+                              key={index}
+                              className="mx-1"
+                              variant={
+                                page === "..."
+                                  ? "ghost"
+                                  : currentPage + 1 === page
+                                  ? "default"
+                                  : "outline"
                               }
-                            }}>
-                            {page}
-                          </Button>
-                        ))}
-                      </div>
+                              disabled={page === "..."}
+                              onClick={() => {
+                                if (typeof page === "number") {
+                                  setCurrentPage(page - 1);
+                                }
+                              }}>
+                              {page}
+                            </Button>
+                          ))}
+                        </div>
 
-                      <Button
-                        variant="outline"
-                        disabled={
-                          upcomingLessons.length < itemsPerPage || loading
+                        <Button
+                          variant="outline"
+                          disabled={
+                            currentPage >= totalPages - 1 || 
+                            upcomingLessons.length < itemsPerPage || 
+                            loading
+                          }
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
+                          Prossime
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        {upcomingLessons.length === 0 ? 
+                          "Nessuna lezione trovata" : 
+                          `${upcomingLessons.length} ${upcomingLessons.length === 1 ? "lezione" : "lezioni"} trovate`
                         }
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
-                        Prossime
-                      </Button>
-                    </div>
+                      </div>
+                    )}
                   </TableCaption>
                   <TableHeader>
                     <TableRow className="dark:border-slate-700">
@@ -382,7 +394,11 @@ export default function Home() {
                               {formatTime(lesson.time)}
                             </TableCell>
                             <TableCell className="dark:text-slate-100">
-                              {lesson.amount_hours}
+                              <Badge
+                                variant={"outline"}
+                                className="dark:border-slate-600 dark:text-slate-100">
+                                {lesson.amount_hours}h
+                              </Badge>
                             </TableCell>
                             <TableCell
                               className="text-right"
@@ -459,7 +475,11 @@ export default function Home() {
                               {formatTime(lesson.time)}
                             </TableCell>
                             <TableCell className="dark:text-slate-100">
-                              {lesson.amount_hours}
+                              <Badge
+                                variant={"outline"}
+                                className="dark:border-slate-600 dark:text-slate-100">
+                                {lesson.amount_hours}h
+                              </Badge>
                             </TableCell>
                             <TableCell
                               className="text-right"
