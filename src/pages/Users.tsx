@@ -2,9 +2,30 @@
 import React, { useEffect, useState } from "react";
 import { useUser } from "../hooks/useUser.tsx";
 import { useNavigate } from "react-router-dom";
-import { ColumnDef, useSortBy } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { Profile } from "@/types";
 import { supabase } from "@/services/supabaseClient.tsx";
+
+/**
+ * Users.tsx
+ *
+ * * This file contains the Users component which displays a list of user profiles
+ * in a table format. It fetches user data from a Supabase database and displays
+ * various details about each user, including their avatar, total hours, license
+ * expiration, and other relevant information.
+ *
+ * Main Methods:
+ *  @fetchLessonsCountForProfile Fetches the total number of lessons for a given profile.
+ *  @fetchProfiles Fetches all profiles from the Supabase database and enriches them
+ *  with avatar URLs and lesson counts.
+ *
+ * Main Classes:
+ * - Users: The main component that renders the user profiles in a table.
+ * - Avatar: A custom component used to display user avatars.
+ * - DataTable: A reusable component for displaying tabular data.
+ * - Button, Badge, Card, CardContent, CardDescription, CardHeader, CardTitle: UI components
+ *   from the Shadcn library used for styling and layout.
+ */
 
 // Shadcn Components
 import { Button } from "@/components/ui/button";
@@ -14,7 +35,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 
@@ -183,7 +204,7 @@ export default function Users() {
         row.original.soccorritori && (
           <Badge
             variant="tertiary"
-            className="text-sm text-white dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600">
+            className="text-sm text-white dark:bg-black-800 dark:text-slate-100 dark:border-slate-600">
             ok
           </Badge>
         ),
@@ -195,7 +216,7 @@ export default function Users() {
         row.original.sensibilizzazione && (
           <Badge
             variant="tertiary"
-            className="text-sm text-white dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600">
+            className="text-sm text-white dark:bg-black-800 dark:text-slate-100 dark:border-slate-600">
             ok
           </Badge>
         ),
@@ -261,8 +282,8 @@ export default function Users() {
   ];
 
   return (
-    <div className="container px-[.8rem] py-6">
-      <Card className="dark:border-slate-700 dark:bg-slate-900">
+    <div className="container py-2 space-y-6">
+      <Card className="dark:border-slate-700 dark:bg-black-900">
         <CardContent>
           <DataTable
             columns={columns}

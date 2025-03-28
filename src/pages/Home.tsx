@@ -264,7 +264,7 @@ export default function Home() {
     <div className="container py-2 space-y-6">
       {user ? (
         isAdmin ? (
-          <Card className="dark:border-slate-700 dark:bg-slate-900">
+          <Card className="dark:border-slate-700 dark:bg-black-900">
             <CardHeader>
               <h1 className="text-2xl font-bold tracking-tight dark:text-slate-100">
                 Prossime lezioni
@@ -318,8 +318,8 @@ export default function Home() {
                         <Button
                           variant="outline"
                           disabled={
-                            currentPage >= totalPages - 1 || 
-                            upcomingLessons.length < itemsPerPage || 
+                            currentPage >= totalPages - 1 ||
+                            upcomingLessons.length < itemsPerPage ||
                             loading
                           }
                           onClick={() => setCurrentPage(currentPage + 1)}
@@ -329,10 +329,13 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="text-center">
-                        {upcomingLessons.length === 0 ? 
-                          "Nessuna lezione trovata" : 
-                          `${upcomingLessons.length} ${upcomingLessons.length === 1 ? "lezione" : "lezioni"} trovate`
-                        }
+                        {upcomingLessons.length === 0
+                          ? "Nessuna lezione trovata"
+                          : `${upcomingLessons.length} ${
+                              upcomingLessons.length === 1
+                                ? "lezione"
+                                : "lezioni"
+                            } trovate`}
                       </div>
                     )}
                   </TableCaption>
@@ -359,7 +362,7 @@ export default function Home() {
                         <TableRow className="">
                           <TableCell
                             colSpan={4}
-                            className="dark:bg-slate-800 dark:border-slate-700">
+                            className="dark:bg-black-800 dark:border-slate-700">
                             <div className="font-semibold py-1 dark:text-slate-100">
                               Oggi
                             </div>
@@ -440,7 +443,7 @@ export default function Home() {
                         <TableRow>
                           <TableCell
                             colSpan={4}
-                            className="bg-muted dark:bg-slate-800 dark:border-slate-700">
+                            className="bg-muted dark:bg-black-800 dark:border-slate-700">
                             <div className="font-semibold py-1 dark:text-slate-100">
                               Prossimamente
                             </div>

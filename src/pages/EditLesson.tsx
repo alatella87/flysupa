@@ -6,6 +6,26 @@ import { supabase } from "../services/supabaseClient.tsx";
 import { Lesson, LessonItem, Profile } from "@/types";
 import { X, ArrowLeft } from "lucide-react";
 
+/**
+ * EditLesson Component
+ *
+ * This component is responsible for editing a specific lesson. It allows users to:
+ * - View and edit the details of a lesson, including its date, duration, and content.
+ * - Manage associations between the lesson and various lesson items.
+ * - Display user profile information related to the lesson.
+ * - Provide a user-friendly interface for selecting and deselecting lesson items.
+ *
+ * Key functionalities include:
+ * - Fetching lesson details, user profile, and available lesson items from the database.
+ * - Handling the selection and deselection of lesson items with real-time updates.
+ * - Associating and removing lesson items from the lesson in the database.
+ * - Displaying the total number of lessons assigned to the user profile.
+ * - Navigating back to the previous page.
+ *
+ * The component uses various hooks such as useState, useEffect, useRef, and useCallback
+ * to manage state, side effects, and performance optimizations.
+ */
+
 import { Badge } from "@/components/ui/badge";
 import {
   Command,
@@ -47,8 +67,6 @@ export default function EditLesson() {
   const [inputValue, setInputValue] = useState("");
 
   const [open, setOpen] = useState(false);
-
-  const [amountHours, setAmoutHours] = useState(1);
 
   const handleUnselect = useCallback(
     async (item: LessonItem) => {
@@ -214,12 +232,12 @@ export default function EditLesson() {
     if (error) {
       console.error("Error fetching profile data:", error);
     } else {
-      setProfile(profileData.profiles as any);
+      setProfile(profileData.profiles as Profile);
       getAvatarUrl(profileData.profiles.avatar_url);
     }
   }
 
-  async function getAvatarUrl(path: any) {
+  async function getAvatarUrl(path: string): Promise<void> {
     try {
       const { data, error } = await supabase.storage
         .from("avatars")
@@ -282,7 +300,7 @@ export default function EditLesson() {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <Card className="dark:border-slate-700 dark:bg-slate-900">
+        <Card className="dark:border-slate-700 dark:bg-black-900">
           <CardHeader />
           <CardContent className="mb-4">
             <div className="flex flex-row items-center justify-between">
@@ -308,7 +326,7 @@ export default function EditLesson() {
                   <Badge
                     className={
                       profile?.sensibilizzazione
-                        ? "bg-[#aefa1f]"
+                        ? "bg-[#23c55d] dark:bg-[#23c55d] "
                         : "bg-gray-400"
                     }
                     variant={
@@ -321,7 +339,9 @@ export default function EditLesson() {
                   <div className="mt-1"></div>
                   <Badge
                     className={
-                      profile?.soccorritori ? "bg-[#aefa1f]" : "bg-gray-400"
+                      profile?.soccorritori
+                        ? "bg-[#23c55d] dark:bg-[#23c55d] "
+                        : "bg-gray-400"
                     }
                     variant={profile?.soccorritori ? undefined : "outline"}>
                     {profile?.soccorritori ? "Soccorritore" : "No Soccorritore"}
@@ -345,7 +365,7 @@ export default function EditLesson() {
         </Card>
 
         <div className="grid grid-cols-2 gap-4">
-          <Card className="dark:border-slate-700 dark:bg-slate-900">
+          <Card className="dark:border-slate-700 dark:bg-black-900">
             <CardHeader>
               <CardTitle className="dark:text-slate-100">Data</CardTitle>
               <CardDescription className="dark:text-slate-400">
@@ -363,7 +383,7 @@ export default function EditLesson() {
             </CardContent>
           </Card>
 
-          <Card className="dark:border-slate-700 dark:bg-slate-900">
+          <Card className="dark:border-slate-700 dark:bg-black-900">
             <CardHeader>
               <CardTitle className="dark:text-slate-100">Contenuto</CardTitle>
               <CardDescription className="dark:text-slate-400">
@@ -381,7 +401,7 @@ export default function EditLesson() {
                         <Badge
                           key={item.id}
                           variant="secondary"
-                          className="text-md dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                          className="text-md dark:bg-black-800 dark:text-slate-100 dark:hover:bg-slate-700">
                           {item.id} - {item.title}
                           <button
                             className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -425,7 +445,7 @@ export default function EditLesson() {
                 <div className="relative mt-2">
                   <CommandList>
                     {open && availableItems.length > 0 ? (
-                      <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-slate-900 text-popover-foreground shadow-md outline-none animate-in">
+                      <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-black-900 text-popover-foreground shadow-md outline-none animate-in">
                         <CommandGroup className="h-[250px] overflow-auto select-none">
                           {availableItems
                             .filter(

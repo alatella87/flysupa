@@ -7,12 +7,7 @@ import { AvatarProps } from "@/types";
 // Shadcn Components
 import { Avatar as ShadcnAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Add this near the top of the file, after imports
 const pulseKeyframes = `
@@ -30,8 +25,8 @@ const pulseKeyframes = `
 `;
 
 // Add the keyframes to the document
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
+if (typeof document !== "undefined") {
+  const style = document.createElement("style");
   style.textContent = pulseKeyframes;
   document.head.appendChild(style);
 }
@@ -40,7 +35,7 @@ if (typeof document !== 'undefined') {
 const TOTAL_SEGMENTS = 20;
 const CIRCLE_PADDING = 4; // Padding around the avatar
 const BASE_AVATAR_SIZE = 40; // Base size for sm avatar
-const CIRCLE_SIZE = BASE_AVATAR_SIZE + (CIRCLE_PADDING * 2); // Total size including padding
+const CIRCLE_SIZE = BASE_AVATAR_SIZE + CIRCLE_PADDING * 2; // Total size including padding
 const STROKE_WIDTH = 2;
 const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -70,8 +65,7 @@ const UserIcon = () => (
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+    xmlns="http://www.w3.org/2000/svg">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -119,10 +113,14 @@ export default function Avatar({
     const startAngle = index * segmentAngle;
     const endAngle = startAngle + segmentAngle - GAP_ANGLE;
 
-    const startX = scaledCircleSize / 2 + scaledRadius * Math.cos(startAngle - Math.PI / 2);
-    const startY = scaledCircleSize / 2 + scaledRadius * Math.sin(startAngle - Math.PI / 2);
-    const endX = scaledCircleSize / 2 + scaledRadius * Math.cos(endAngle - Math.PI / 2);
-    const endY = scaledCircleSize / 2 + scaledRadius * Math.sin(endAngle - Math.PI / 2);
+    const startX =
+      scaledCircleSize / 2 + scaledRadius * Math.cos(startAngle - Math.PI / 2);
+    const startY =
+      scaledCircleSize / 2 + scaledRadius * Math.sin(startAngle - Math.PI / 2);
+    const endX =
+      scaledCircleSize / 2 + scaledRadius * Math.cos(endAngle - Math.PI / 2);
+    const endY =
+      scaledCircleSize / 2 + scaledRadius * Math.sin(endAngle - Math.PI / 2);
 
     const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
 
@@ -137,11 +135,10 @@ export default function Avatar({
       viewBox={`0 0 ${scaledCircleSize} ${scaledCircleSize}`}
       className="absolute"
       style={{
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-      }}
-    >
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+      }}>
       {Array.from({ length: TOTAL_SEGMENTS }).map((_, index) => (
         <path
           key={index}
@@ -166,9 +163,8 @@ export default function Avatar({
         style={{
           width: scaledCircleSize,
           height: scaledCircleSize,
-          contain: 'paint'
-        }}
-      >
+          contain: "paint",
+        }}>
         <ProgressCircle />
         <ShadcnAvatar
           className={`
@@ -177,10 +173,9 @@ export default function Avatar({
             relative
             z-10
             bg-slate-100
-            dark:bg-slate-800
+            dark:bg-black-800
             overflow-hidden
-          `}
-        >
+          `}>
           {imgUrl ? (
             <img
               src={imgUrl}
@@ -211,9 +206,8 @@ export default function Avatar({
           style={{
             width: scaledCircleSize,
             height: scaledCircleSize,
-            contain: 'paint'
-          }}
-        >
+            contain: "paint",
+          }}>
           <ProgressCircle />
           <ShadcnAvatar
             className={`
@@ -222,10 +216,9 @@ export default function Avatar({
               relative
               z-10
               bg-slate-100
-              dark:bg-slate-800
+              dark:bg-black-800
               overflow-hidden
-            `}
-          >
+            `}>
             {imgUrl ? (
               <img
                 src={imgUrl}
@@ -246,10 +239,7 @@ export default function Avatar({
           <div className="mt-4 w-full">
             <label htmlFor="avatar-upload" className="w-full">
               <div className="w-full cursor-pointer">
-                <Button
-                  className="w-full"
-                  disabled={uploading}
-                >
+                <Button className="w-full" disabled={uploading}>
                   {uploading ? "Caricamento..." : "Carica foto"}
                 </Button>
               </div>

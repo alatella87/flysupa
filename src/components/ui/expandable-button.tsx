@@ -241,7 +241,7 @@ export default function ExpandableButton({
           <Input
             id="hours"
             type="number"
-            className="dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 max-w-[100px]"
+            className="dark:bg-black-800 dark:text-slate-400 dark:border-slate-700 max-w-[100px]"
             value={amountHours}
             onChange={(e) => setAmoutHours(e.target.value)}
           />
@@ -296,7 +296,7 @@ export default function ExpandableButton({
             />
             <Input
               type="number"
-              className="dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 max-w-[60px]"
+              className="dark:bg-black-800 dark:text-slate-400 dark:border-slate-700 max-w-[60px]"
               value={amountHours}
               onChange={(e) => setAmoutHours(e.target.value)}
             />

@@ -32,7 +32,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 // License Thumbnail Component
 function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
   return (
-    <div className="relative flex items-center justify-center w-full h-28 bg-slate-200 dark:bg-slate-800 rounded-md overflow-hidden">
+    <div className="relative flex items-center justify-center w-full h-28 bg-slate-200 dark:bg-black-800 rounded-md overflow-hidden">
       {licenseUrl ? (
         <Dialog>
           <DialogTrigger asChild>
@@ -42,7 +42,7 @@ function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
                 alt="Driving License"
                 className="w-full h-full object-contain"
               />
-              <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-black-800/80 p-1.5 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -406,7 +406,7 @@ export default function UserEditForm() {
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* User data card */}
-        <Card className="w-full lg:w-1/3 dark:border-slate-700 dark:bg-slate-900">
+        <Card className="w-full lg:w-1/3 dark:border-slate-700 dark:bg-black-900">
           <CardHeader>
             <div className="flex flex-row items-center gap-4">
               <div>
@@ -454,7 +454,7 @@ export default function UserEditForm() {
                     id="email"
                     value={profile?.email || ""}
                     disabled
-                    className="dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                    className="dark:bg-black-800 dark:text-slate-400 dark:border-slate-700"
                   />
                 </div>
               </div>
@@ -469,7 +469,7 @@ export default function UserEditForm() {
                     value={profile?.phone || ""}
                     onChange={(e) => handleFieldChange("phone", e.target.value)}
                     placeholder="+41"
-                    className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:placeholder:text-slate-500"
+                    className="dark:bg-black-800 dark:text-black dark:placeholder:text-slate-500"
                   />
                 </div>
                 <div className="space-y-2">
@@ -482,7 +482,7 @@ export default function UserEditForm() {
                     onChange={(e) =>
                       handleFieldChange("nome_utente", e.target.value)
                     }
-                    className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700"
+                    className="dark:bg-black-800 dark:text-black dark:border-slate-700"
                   />
                 </div>
               </div>
@@ -584,7 +584,7 @@ export default function UserEditForm() {
         </Card>
 
         {/* Lessons card */}
-        <Card className="w-full lg:w-2/3 dark:border-slate-700 dark:bg-slate-900">
+        <Card className="w-full lg:w-2/3 dark:border-slate-700 dark:bg-black-900">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 dark:text-slate-100">
               Lezioni

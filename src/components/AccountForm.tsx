@@ -29,7 +29,7 @@ function LicenseThumbnail({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative flex items-center justify-center w-full h-36 bg-slate-200 dark:bg-slate-800 rounded-md overflow-hidden">
+    <div className="relative flex items-center justify-center w-full h-36 bg-slate-200 dark:bg-black-800 rounded-md overflow-hidden">
       {licenseUrl ? (
         <>
           <Dialog>
@@ -40,7 +40,7 @@ function LicenseThumbnail({
                   alt="Driving License"
                   className="w-full h-full object-contain"
                 />
-                <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
+                <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-black-800/80 p-1.5 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -189,7 +189,7 @@ export default function AccountForm() {
       )}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Avatar Card */}
-        <Card className="dark:border-slate-700 dark:bg-slate-900 flex flex-col">
+        <Card className="dark:border-slate-700 dark:bg-black-900 flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 dark:text-slate-100">
               Il tuo profilo
@@ -217,7 +217,7 @@ export default function AccountForm() {
           <CardContent className="flex flex-col items-center flex-grow">
             <Avatar className="h-36 w-36 mb-4">
               <AvatarImage src={avatarUrl || ""} />
-              <AvatarFallback className="dark:bg-slate-800 dark:text-slate-400">
+              <AvatarFallback className="dark:bg-black-800 dark:text-slate-400">
                 {getInitials(nomeUtente || "")}
               </AvatarFallback>
             </Avatar>
@@ -240,7 +240,7 @@ export default function AccountForm() {
                         file:text-sm file:font-semibold
                         file:bg-slate-50 file:text-slate-700
                         dark:file:bg-slate-800 dark:file:text-slate-100
-                        dark:text-slate-100 dark:bg-transparent
+                        dark:bg-transparent
                         hover:file:bg-slate-100 dark:hover:file:bg-slate-700
                         disabled:opacity-50 disabled:cursor-not-allowed
                         ${uploadingAvatar ? "opacity-50" : ""}
@@ -261,7 +261,7 @@ export default function AccountForm() {
         </Card>
 
         {/* License Card */}
-        <Card className="dark:border-slate-700 dark:bg-slate-900 flex flex-col">
+        <Card className="dark:border-slate-700 dark:bg-black-900 flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 dark:text-slate-100">
               Patente di Guida
@@ -312,8 +312,8 @@ export default function AccountForm() {
                         file:rounded-l-md file:border-0
                         file:text-sm file:font-semibold
                         file:bg-slate-50 file:text-slate-700
-                        dark:file:bg-slate-800 dark:file:text-slate-100
-                        dark:text-slate-100 dark:bg-transparent
+                        dark:file:bg-slate-800
+                        dark:bg-transparent
                         hover:file:bg-slate-100 dark:hover:file:bg-slate-700
                         disabled:opacity-50 disabled:cursor-not-allowed
                         ${uploadingLicense ? "opacity-50" : ""}
@@ -329,7 +329,7 @@ export default function AccountForm() {
         </Card>
 
         {/* User Data Card */}
-        <Card className="dark:border-slate-700 dark:bg-slate-900 flex flex-col">
+        <Card className="dark:border-slate-700 dark:bg-black-900 flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 dark:text-slate-100">
               Dati utente
@@ -359,7 +359,7 @@ export default function AccountForm() {
                 type="text"
                 value={user?.email || ""}
                 disabled
-                className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700"
+                className="dark:bg-black-800"
               />
             </div>
             <div className="space-y-2">
@@ -372,7 +372,7 @@ export default function AccountForm() {
                 value={nomeUtente || ""}
                 disabled={!isEditMode}
                 onChange={(e) => setNomeUtente(e.target.value)}
-                className="dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 disabled:opacity-50"
+                className="dark:bg-black-800  dark:border-slate-700 disabled:opacity-50"
               />
             </div>
           </CardContent>
@@ -392,38 +392,6 @@ export default function AccountForm() {
             </CardFooter>
           )}
         </Card>
-        {/* Hours Card */}
-        {/* <Card className="dark:border-slate-700 dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 dark:text-slate-100">
-              Totale Ore
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-muted-foreground dark:text-slate-400">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col justify-end">
-              <div className="text-4xl font-bold mb-2 dark:text-slate-100">
-                {totalHours} ore
-              </div>
-              <p className="text-muted-foreground dark:text-slate-400">
-                Descrive il numero totale di ore fatte/fatturate
-              </p>
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
     </div>
   );

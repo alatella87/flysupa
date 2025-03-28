@@ -193,14 +193,14 @@ export default function Navbar() {
                   className="relative h-12 w-12 rounded-full p-0 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={avatarUrl || ""} alt={email || "User"} />
-                    <AvatarFallback className="dark:bg-slate-800 dark:text-slate-100">
+                    <AvatarFallback className="dark:bg-black-800 dark:text-slate-100">
                       {getInitials(email || "")}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-56 dark:bg-slate-900"
+                className="w-56 dark:bg-black-900"
                 align="end"
                 forceMount>
                 <DropdownMenuLabel className="font-normal">
@@ -213,7 +213,7 @@ export default function Navbar() {
                     </p>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="dark:bg-slate-700" />
+                <DropdownMenuSeparator className="dark:bg-black-700" />
                 <DropdownMenuGroup>
                   <DropdownMenuItem
                     asChild
@@ -262,7 +262,7 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
-                <DropdownMenuSeparator className="dark:bg-slate-700" />
+                <DropdownMenuSeparator className="dark:bg-black-700" />
                 <DropdownMenuItem
                   onClick={() => signOutUser(navigate)}
                   className="text-red-500 focus:text-red-500 dark:text-red-400 dark:focus:text-red-400 dark:focus:bg-slate-800">

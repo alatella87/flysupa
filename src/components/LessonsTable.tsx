@@ -623,7 +623,7 @@ export default function LessonsTable({
                 <TableRow
                   className={clsx(
                     "dark:border-slate-700 cursor-pointer",
-                    expandedRows[lesson.id] && "bg-muted dark:bg-slate-800/50"
+                    expandedRows[lesson.id] && "bg-muted dark:bg-black-800/50"
                   )}
                   onClick={() => toggleRowExpansion(lesson.id)}>
                   <TableCell className="dark:text-slate-100 max-w-[100%]">
@@ -749,7 +749,7 @@ export default function LessonsTable({
 
                 {/* Expanded content row */}
                 {expandedRows[lesson.id] && (
-                  <TableRow className="dark:border-slate-700 dark:bg-slate-800/20">
+                  <TableRow className="dark:border-slate-700 dark:bg-black-800/20">
                     <TableCell colSpan={5} className="py-2">
                       <div className="ml-2 dark:border-slate-700 py-2">
                         <div className="flex justify-between items-center mb-2">
@@ -769,7 +769,7 @@ export default function LessonsTable({
                                   <div
                                     key={index}
                                     className={clsx(
-                                      "flex items-center bg-muted p-2 rounded dark:bg-slate-800 cursor-pointer transition-all",
+                                      "flex items-center bg-muted p-2 rounded dark:bg-black-800 cursor-pointer transition-all",
                                       updating ===
                                         `${lesson.id}-${detail.lesson_item_id}` &&
                                         "opacity-50",
@@ -865,7 +865,7 @@ export default function LessonsTable({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-700">
+        <DialogContent className="sm:max-w-md dark:bg-black-900 dark:border-slate-700">
           <DialogHeader>
             <DialogTitle className="dark:text-slate-100">
               Conferma eliminazione
@@ -900,7 +900,7 @@ export default function LessonsTable({
 
       {/* Add Item Dialog */}
       <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
-        <DialogContent className="sm:max-w-4xl dark:bg-slate-900 dark:border-slate-700">
+        <DialogContent className="sm:max-w-4xl dark:bg-black-900 dark:border-slate-700">
           <DialogHeader>
             <DialogTitle className="dark:text-slate-100">
               Aggiungi Argomenti
@@ -943,7 +943,7 @@ export default function LessonsTable({
               <div className="relative mt-2">
                 <CommandList>
                   {isItemListOpen && availableItems.length > 0 ? (
-                    <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-slate-900 text-popover-foreground shadow-md outline-none animate-in">
+                    <div className="absolute top-0 z-10 w-full rounded-md border dark:border-slate-700 bg-popover dark:bg-black-900 text-popover-foreground shadow-md outline-none animate-in">
                       <div className="flex divide-x dark:divide-slate-700">
                         {/* LEFT COLUMN - Items with completion status */}
                         <div className="w-1/2">
