@@ -128,7 +128,7 @@ export default function Users() {
         if (hours === 0) return null;
         return (
           <div className="flex items-left">
-            <span className="inline-flex items-center justify-center w-8h-8 rounded-full border border-black dark:border-slate-600 text-gray dark:text-slate-100">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border-b border border-black dark:border-slate-600 text-gray dark:text-slate-100">
               {profile.lessonsCount}
             </span>
           </div>

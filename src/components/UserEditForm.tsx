@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DatePicker } from "@/components/DatePicker";
 // Update imports to include our custom Avatar
 import Avatar from "@/components/Avatar";
 
@@ -27,11 +27,7 @@ import Avatar from "@/components/Avatar";
 import LessonsTable, { NoLessons, LoadingLessons } from "./LessonsTable";
 
 // Import Dialog components
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 // License Thumbnail Component
 function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
@@ -41,24 +37,23 @@ function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
         <Dialog>
           <DialogTrigger asChild>
             <div className="w-full h-full relative group cursor-pointer">
-              <img 
-                src={licenseUrl} 
-                alt="Driving License" 
+              <img
+                src={licenseUrl}
+                alt="Driving License"
                 className="w-full h-full object-contain"
               />
               <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="text-slate-700 dark:text-slate-200"
-                >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-slate-700 dark:text-slate-200">
                   <path d="m15 3 6 6m-6-6v6h6"></path>
                   <path d="M10 21H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
                   <path d="M21 13v8"></path>
@@ -68,9 +63,9 @@ function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
             </div>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex items-center justify-center">
-            <img 
-              src={licenseUrl} 
-              alt="Driving License" 
+            <img
+              src={licenseUrl}
+              alt="Driving License"
               className="max-w-full max-h-[70vh] object-contain"
             />
           </DialogContent>
@@ -86,8 +81,7 @@ function LicenseThumbnail({ licenseUrl }: { licenseUrl: string | null }) {
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+            strokeLinejoin="round">
             <rect width="18" height="12" x="3" y="6" rx="2" />
             <path d="M3 10h18" />
             <path d="M7 15h.01" />
@@ -328,37 +322,35 @@ export default function UserEditForm() {
   };
 
   // Update the createLesson function
-  const createLesson = async (id: string) => {
-    const lessonData = {
-      profile_id: id,
-      title: "Lezione di Guida",
-      description: "Lezione di Guida",
-      amount_hours: 1,
-    };
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify(lessonData),
-        }
-      );
+  // const createLesson = async (id: string) => {
+  //   const lessonData = {
+  //     profile_id: id,
+  //     amount_hours: 1,
+  //   };
+  //   try {
+  //     const response = await fetch(
+  //       `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  //           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+  //         },
+  //         body: JSON.stringify(lessonData),
+  //       }
+  //     );
 
-      if (!response.ok) {
-        throw new Error("Failed to create lesson");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to create lesson");
+  //     }
 
-      // Refetch lessons
-      await fetchProfileLessons(id);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    }
-  };
+  //     // Refetch lessons
+  //     await fetchProfileLessons(id);
+  //   } catch (err: unknown) {
+  //     setError(err instanceof Error ? err.message : "An error occurred");
+  //   }
+  // };
 
   // Update the deleteLesson function similarly
   const deleteLesson = async (id: string, profileId: string) => {
@@ -496,12 +488,12 @@ export default function UserEditForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="licenza_date" className="dark:text-slate-100">
-                  LAC
-                </Label>
-                <Input
-                  id="licenza_date"
-                  type="date"
+                <div>
+                  <Label htmlFor="licenza_date" className="dark:text-slate-100">
+                    Rilascio Lic. Allievo Conducente (LAC)
+                  </Label>
+                </div>
+                <DatePicker
                   value={
                     profile?.licenza_date
                       ? new Date(profile.licenza_date)
@@ -509,10 +501,7 @@ export default function UserEditForm() {
                           .split("T")[0]
                       : ""
                   }
-                  onChange={(e) =>
-                    handleFieldChange("licenza_date", e.target.value)
-                  }
-                  className="dark:bg-slate-800 text-white dark:text-slate-100 dark:border-slate-700"
+                  onChange={(val) => handleFieldChange("licenza_date", val)}
                 />
               </div>
             </div>
@@ -522,11 +511,11 @@ export default function UserEditForm() {
               {/* Checkboxes section */}
               <div className="border rounded-lg p-4 space-y-4 flex-1 dark:border-slate-700">
                 <h3 className="text-lg font-medium dark:text-slate-100">
-                  Status & Certificazioni
+                  Certificazioni
                 </h3>
 
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                  {/* <div className="flex items-center space-x-2">
                     <Checkbox
                       disabled={true}
                       id="admin"
@@ -539,7 +528,7 @@ export default function UserEditForm() {
                     <Label htmlFor="admin" className="dark:text-slate-100">
                       Amministratore
                     </Label>
-                  </div>
+                  </div> */}
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -623,20 +612,17 @@ export default function UserEditForm() {
           <CardContent>
             {lessons && lessons.length > 0 ? (
               <LessonsTable
+                id={id as any}
                 lessons={lessons}
                 profile={profile}
                 lessonsCount={lessonsCount}
-                createLesson={createLesson}
                 deleteLesson={deleteLesson}
-                id={id as any}
                 refetchLessons={fetchProfileLessons}
               />
             ) : (
               <NoLessons
-                lessons={lessons}
-                profile={profile}
-                createLesson={createLesson}
-                id={id as any}
+                profileId={profile?.id as any}
+                refetchLessons={fetchProfileLessons}
               />
             )}
           </CardContent>
@@ -644,7 +630,9 @@ export default function UserEditForm() {
             <div className="flex items-center gap-2">
               <div className="text-sm text-muted-foreground dark:text-slate-400">
                 Totale ore:{" "}
-                {/* <span className="font-medium dark:text-slate-100">{profile?.total_hours || 0}</span> */}
+                <span className="font-medium dark:text-slate-100">
+                  {/* {profile?.total_hours || 0} */}
+                </span>
               </div>
             </div>
           </CardFooter>

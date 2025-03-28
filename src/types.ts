@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 // Common interfaces for FlySupa application
 
@@ -43,6 +43,7 @@ export interface Lesson {
 }
 
 export interface LessonItem {
+  inCurrentLesson: string | number | boolean | null | undefined;
   title: ReactNode;
   id: string;
   name: string;
@@ -59,7 +60,6 @@ export interface LessonsTableProps {
   profile: Profile | null;
   lessons: Lesson[];
   lessonsCount: number;
-  createLesson: (id: string) => void;
   deleteLesson: (id: string, profileId: string) => void;
   refetchLessons?: (profileId: string) => Promise<void>;
 }
@@ -100,7 +100,10 @@ export interface UserContextType {
   setShouldRedirect: (redirect: boolean) => void;
 
   // Async operations
-  uploadImage: (event: React.ChangeEvent<HTMLInputElement>, type?: 'avatar' | 'license') => Promise<void>;
+  uploadImage: (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type?: "avatar" | "license",
+  ) => Promise<void>;
   updateProfile: (profile: Profile) => Promise<void>;
   downloadAndSetUserAvatar: (path: string) => Promise<string | undefined>;
   refetchTotalHours: () => Promise<void>;

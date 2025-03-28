@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useEffect } from "react"; 
-import { Calendar as CalendarIcon } from "lucide-react"
+import { useEffect } from "react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "../services/supabaseClient.tsx";
 import { cn } from "@/lib/utils";
@@ -16,38 +16,72 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface DateTimePicker24hProps {
-  lessonId: string;
+  lessonId?: string;
+  date?: Date;
+  setDate?: (date: Date) => void;
+  onDateTimeSelect?: (date: Date) => void;
 }
 
-export function DateTimePicker24h({ lessonId }: DateTimePicker24hProps) {
-
-  const [date, setDate] = React.useState<Date>();
+export function DateTimePicker24h({
+  lessonId,
+  date: externalDate,
+  setDate: setExternalDate,
+  onDateTimeSelect,
+}: DateTimePicker24hProps) {
+  const [date, setInternalDate] = React.useState<Date | undefined>(
+    externalDate
+  );
   const [isOpen, setIsOpen] = React.useState(false);
-  const [time, setTime] = React.useState<{hour: number; minute: number}>({ hour: 7, minute: 0 });
+  const [time, setTime] = React.useState<{ hour: number; minute: number }>({
+    hour: 7,
+    minute: 0,
+  });
 
   const hours = Array.from({ length: 17 }, (_, i) => i + 7);
   const minutes = [0, 15, 30, 45];
 
+  // Handle externally controlled date if provided
+  useEffect(() => {
+    if (externalDate) {
+      setInternalDate(externalDate);
+      setTime({
+        hour: externalDate.getHours(),
+        minute: externalDate.getMinutes(),
+      });
+    }
+  }, [externalDate]);
+
+  // Use the appropriate setDate function
+  const setDate = (newDate: Date | undefined) => {
+    if (setExternalDate && newDate) {
+      setExternalDate(newDate);
+    }
+    setInternalDate(newDate);
+  };
+
   const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate && lessonId) {
-      // Preserve the current time when selecting a new date
-      if (time) {
-        selectedDate.setHours(time.hour);
-        selectedDate.setMinutes(time.minute);
-      }
-      
-      setDate(selectedDate);
-      
+    if (!selectedDate) return;
+
+    // Preserve the current time when selecting a new date
+    if (time) {
+      selectedDate.setHours(time.hour);
+      selectedDate.setMinutes(time.minute);
+    }
+
+    setDate(selectedDate);
+
+    // If we have a lessonId, update the existing lesson
+    if (lessonId) {
       // Format the date for database update (YYYY-MM-DD)
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
       const day = String(selectedDate.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
-      
+
       // Update the database
       async function updateLessonDate(lessonId: string, dateStr: string) {
         console.log(`Updating lesson ${lessonId} date to ${dateStr}`);
-        
+
         const { data, error } = await supabase
           .from("lessons")
           .update({ date: dateStr })
@@ -57,11 +91,15 @@ export function DateTimePicker24h({ lessonId }: DateTimePicker24hProps) {
           console.error("Error updating lesson date:", error.message);
           return null;
         }
-        
+
         return data;
       }
-      
+
       updateLessonDate(lessonId, formattedDate);
+    }
+    // If we have an onDateTimeSelect callback, this is being used in ExpandableButton
+    else if (onDateTimeSelect) {
+      onDateTimeSelect(selectedDate);
     }
   };
 
@@ -83,24 +121,24 @@ export function DateTimePicker24h({ lessonId }: DateTimePicker24hProps) {
         if (data.date) {
           const fetchedDate = new Date(data.date);
           setDate(fetchedDate);
-          
+
           // Set time if available
           if (data.time) {
             try {
-              const timeParts = data.time.split(':');
+              const timeParts = data.time.split(":");
               if (timeParts.length >= 2) {
                 const hours = parseInt(timeParts[0], 10);
                 const minutes = parseInt(timeParts[1], 10);
-                
+
                 // Update date with time
                 fetchedDate.setHours(hours);
                 fetchedDate.setMinutes(minutes);
                 setDate(fetchedDate);
-                
+
                 // Update time state
                 setTime({
                   hour: hours,
-                  minute: minutes
+                  minute: minutes,
                 });
               }
             } catch (e) {
@@ -118,59 +156,66 @@ export function DateTimePicker24h({ lessonId }: DateTimePicker24hProps) {
 
   const handleTimeChange = (type: "hour" | "minute", value: string) => {
     const valueNum = parseInt(value, 10);
-    
+
     // Create a new time object based on current time
     const newTime = { ...time };
-    
+
     // Update the hour or minute
     if (type === "hour") {
       newTime.hour = valueNum;
     } else if (type === "minute") {
       newTime.minute = valueNum;
     }
-    
+
     // Update time state
     setTime(newTime);
-    
+
     // Update the date object if it exists
     if (date) {
       const newDate = new Date(date);
       newDate.setHours(newTime.hour);
       newDate.setMinutes(newTime.minute);
       setDate(newDate);
-    }
-    
-    // Format the time string for the database (HH:MM:00)
-    const formattedTime =
-    `${String(newTime.hour).padStart(2, '0')}:${String(newTime.minute).padStart(2, '0')}:00`;
-    
-    // Update in database
-    async function updateLessonTime(lessonId: string, timeStr: string) {
-      console.log(`Updating lesson ${lessonId} time to ${timeStr}`);
-      
-      const { data, error } = await supabase
-        .from("lessons")
-        .update({ time: timeStr })
-        .eq("id", lessonId);
 
-      if (error) {
-        console.error("Error updating lesson time:", error.message);
-        return null;
+      // If we have an onDateTimeSelect callback, this is being used in ExpandableButton
+      if (onDateTimeSelect) {
+        onDateTimeSelect(newDate);
       }
-      
-      return data;
     }
-    
-    updateLessonTime(lessonId, formattedTime)
-      .then((updatedLesson) => {
+
+    // If we have a lessonId, update the existing lesson
+    if (lessonId) {
+      // Format the time string for the database (HH:MM:00)
+      const formattedTime = `${String(newTime.hour).padStart(2, "0")}:${String(
+        newTime.minute
+      ).padStart(2, "0")}:00`;
+
+      // Update in database
+      async function updateLessonTime(lessonId: string, timeStr: string) {
+        console.log(`Updating lesson ${lessonId} time to ${timeStr}`);
+
+        const { data, error } = await supabase
+          .from("lessons")
+          .update({ time: timeStr })
+          .eq("id", lessonId);
+
+        if (error) {
+          console.error("Error updating lesson time:", error.message);
+          return null;
+        }
+
+        return data;
+      }
+
+      updateLessonTime(lessonId, formattedTime).then((updatedLesson) => {
         if (updatedLesson) {
           console.log("Updated lesson time successfully");
         } else {
           console.log("Failed to update lesson time");
         }
       });
+    }
   };
- 
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -178,24 +223,26 @@ export function DateTimePicker24h({ lessonId }: DateTimePicker24hProps) {
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-start text-left font-normal dark:border-slate-700 bg-popover dark:bg-slate-900",
+            "dark:bg-slate-600 border-slate-300 dark:border-white dark:text-white flex flex-row justify-start font-normal text-sm",
             !date && "text-muted-foreground"
           )}>
-          <CalendarIcon className="mr-2 h-4 w-8" />
+          <CalendarIcon className="mr-2 h-4 w-8" color="darkgray" />
           {date ? (
             <>
-              {date.toLocaleString("default", {
+              {date.toLocaleString("it", {
                 day: "2-digit",
-                month: "short",
-                year: "2-digit",
+                month: "long",
+                year: "numeric",
               })}
               <span className="ml-auto">
-                {`${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`}
+                {`${String(time.hour).padStart(2, "0")}:${String(
+                  time.minute
+                ).padStart(2, "0")}`}
               </span>
             </>
           ) : (
             <>
-              <span>Select date and time</span>
+              <span>Selezione data e ora</span>
             </>
           )}
         </Button>

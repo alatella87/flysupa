@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import { Profile, Lesson, LessonsTableProps, LessonItem } from "@/types";
 import { supabase } from "../services/supabaseClient.tsx";
+import ExpandableButton from "./ui/expandable-button.tsx";
 
 // Shadcn Components
 import { Button } from "@/components/ui/button";
@@ -26,16 +27,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
 import { ChevronDown, ChevronRight, X, Plus } from "lucide-react";
 
 export default function LessonsTable({
-  id,
   profile,
   lessons,
-  lessonsCount,
-  createLesson,
   deleteLesson,
   refetchLessons,
 }: LessonsTableProps) {
@@ -586,13 +589,7 @@ export default function LessonsTable({
 
   return (
     <>
-      <Button
-        onClick={() => createLesson(id)}
-        className="p-2 dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
-        size={"sm"}
-        variant={"secondary"}>
-        Aggiungi Lezione
-      </Button>
+      <ExpandableButton profileId={profile?.id} refetch={refetchLessons} />
       <Table>
         <TableCaption className="dark:text-slate-400">
           Lezioni registrate per {profile?.nome_utente}
@@ -601,7 +598,7 @@ export default function LessonsTable({
           <TableRow>
             <TableHead className="dark:text-slate-100">Data</TableHead>
             <TableHead className="dark:text-slate-100">Ora</TableHead>
-            <TableHead className="dark:text-slate-100"></TableHead>
+            <TableHead className="dark:text-slate-100">Ore/Lez.</TableHead>
             <TableHead className="text-right dark:text-slate-100">
               Argomenti
             </TableHead>
@@ -620,7 +617,7 @@ export default function LessonsTable({
                     expandedRows[lesson.id] && "bg-muted dark:bg-slate-800/50"
                   )}
                   onClick={() => toggleRowExpansion(lesson.id)}>
-                  <TableCell className="dark:text-slate-100">
+                  <TableCell className="dark:text-slate-100 max-w-[100%]">
                     <div className="flex items-center">
                       <span className="mr-2">
                         {expandedRows[lesson.id] ? (
@@ -663,11 +660,11 @@ export default function LessonsTable({
                     )}
                   </TableCell>
 
-                  <TableCell className="text-right">
+                  <TableCell>
                     <Badge
                       variant={"outline"}
                       className="dark:border-slate-600 dark:text-slate-100">
-                      {lesson.id}
+                      {lesson.amount_hours}
                     </Badge>
                   </TableCell>
 
@@ -711,9 +708,9 @@ export default function LessonsTable({
                         </svg>
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
-                        className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+                        className="dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
                         onClick={(e) => {
                           e.stopPropagation();
                           setLessonToDelete({
@@ -728,7 +725,7 @@ export default function LessonsTable({
                           height="16"
                           viewBox="0 0 24 24"
                           fill="none"
-                          stroke="currentColor"
+                          stroke="white"
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round">
@@ -756,7 +753,8 @@ export default function LessonsTable({
                             ? lesson.details
                                 .slice() // Create a copy to avoid mutating the original array
                                 .sort(
-                                  (a, b) => a.lesson_item_id - b.lesson_item_id
+                                  (a: any, b: any) =>
+                                    a.lesson_item_id - b.lesson_item_id
                                 ) // Sort by lesson_item_id
                                 .map((detail: any, index: number) => (
                                   <div
@@ -1195,25 +1193,15 @@ export default function LessonsTable({
 }
 
 export function NoLessons({
-  profile,
-  lessons,
-  createLesson,
-  id,
+  profileId,
+  refetchLessons,
 }: {
-  profile: Profile | null;
-  lessons: any;
-  createLesson: (id: string) => void;
-  id: string;
+  refetchLessons: (profileId: string) => Promise<void>;
+  profileId: string;
 }) {
   return (
     <div className="text-left py-4 text-muted-foreground dark:text-slate-400">
-      <Button
-        onClick={() => createLesson(id)}
-        className="p-2 dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
-        size={"sm"}
-        variant={"secondary"}>
-        Aggiungi Lezione
-      </Button>
+      <ExpandableButton profileId={profileId} refetch={refetchLessons} />
     </div>
   );
 }

@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/table";
 
 interface UpcomingLesson {
+  amount_hours: number;
   id: string;
-  title: string;
   date: string;
   time: string;
   profile_id: string;
@@ -28,7 +28,7 @@ interface UpcomingLesson {
   };
   processed_avatar_url?: string;
   isToday?: boolean;
-  lessonsCount?: number; // Add property for lessons count
+  lessonsCount?: number;
 }
 
 export default function Home() {
@@ -36,20 +36,20 @@ export default function Home() {
   const navigate = useNavigate();
   const [upcomingLessons, setUpcomingLessons] = useState<UpcomingLesson[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(8);
+  const [totalLessons, setTotalLessons] = useState(0); // Total lessons count
 
   // Function to check if a date is today
   function checkIsToday(dateString: string): boolean {
-    // Format both dates to YYYY-MM-DD format for reliable comparison
     const formattedLessonDate = dateString.split("T")[0];
     const formattedToday = new Date().toISOString().split("T")[0];
-
     return formattedLessonDate === formattedToday;
   }
 
   // Format a date with day of week
   function formatDate(dateString: string): string {
     if (!dateString) return "TBD";
-
     const dateObj = new Date(dateString);
     return dateObj.toLocaleString("default", {
       weekday: "short",
@@ -62,7 +62,6 @@ export default function Home() {
   // Format time
   function formatTime(timeString: string): string {
     if (!timeString) return "TBD";
-
     try {
       return new Date(`1970-01-01T${timeString}`).toLocaleTimeString(
         "default",
@@ -79,18 +78,20 @@ export default function Home() {
   }
 
   // Function to fetch the total lessons count for a profile
-  async function fetchLessonsCountForProfile(profileId: string): Promise<number> {
+  async function fetchLessonsCountForProfile(
+    profileId: string
+  ): Promise<number> {
     try {
       const { data, error } = await supabase
         .from("lessons")
         .select("id", { count: "exact" })
         .eq("profile_id", profileId);
-        
+
       if (error) {
         console.error("Error counting lessons for profile:", error);
         return 0;
       }
-      
+
       return data?.length || 0;
     } catch (error) {
       console.error("Error in fetchLessonsCountForProfile:", error);
@@ -142,21 +143,38 @@ export default function Home() {
     setLoading(true);
 
     try {
-      // Use gte to include today's lessons
+      const startIndex = currentPage * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage - 1;
+
+      // Fetch total count of lessons
+      const { count, error: countError } = await supabase
+        .from("lessons")
+        .select("*", { count: "exact", head: true })
+        .gte("date", new Date().toISOString().split("T")[0]);
+
+      if (countError) {
+        console.error("Error fetching total lessons count:", countError);
+        setLoading(false);
+        return;
+      }
+
+      setTotalLessons(count || 0);
+
       const { data, error } = await supabase
         .from("lessons")
         .select(
           `id,
-          title,
           date,
           time,
+          amount_hours,
           profile_id,
           profiles (avatar_url, nome_utente)
         `
         )
         .gte("date", new Date().toISOString().split("T")[0])
         .order("date", { ascending: true })
-        .order("time", { ascending: true });
+        .order("time", { ascending: true })
+        .range(startIndex, endIndex);
 
       if (error) throw error;
 
@@ -188,11 +206,58 @@ export default function Home() {
     if (isAdmin) {
       fetchLessons();
     }
-  }, [isAdmin]);
+  }, [isAdmin, currentPage]);
 
   // Group lessons
   const todayLessons = upcomingLessons.filter((lesson) => lesson.isToday);
   const futureLessons = upcomingLessons.filter((lesson) => !lesson.isToday);
+
+  // Calculate the start and end item numbers for the current page
+  const startIndex = currentPage * itemsPerPage + 1;
+  const endIndex = Math.min((currentPage + 1) * itemsPerPage, totalLessons);
+
+  // Calculate the total number of pages
+  const totalPages = Math.ceil(totalLessons / itemsPerPage);
+
+  // Function to generate page numbers array for display
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    if (totalPages <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 0; i < totalPages; i++) {
+        pageNumbers.push(i + 1);
+      }
+    } else {
+      // If total pages is more than 5, show a limited range
+      if (currentPage < 2) {
+        // Show first 5 pages
+        for (let i = 0; i < 5; i++) {
+          pageNumbers.push(i + 1);
+        }
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      } else if (currentPage > totalPages - 3) {
+        // Show last 5 pages
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        for (let i = totalPages - 4; i < totalPages; i++) {
+          pageNumbers.push(i + 1);
+        }
+      } else {
+        // Show current page, 2 pages before and 2 pages after
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i + 1);
+        }
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      }
+    }
+    return pageNumbers;
+  };
+
+  const pageNumbers = getPageNumbers();
 
   return (
     <div className="container py-2 space-y-6">
@@ -203,6 +268,9 @@ export default function Home() {
               <h1 className="text-2xl font-bold tracking-tight dark:text-slate-100">
                 Prossime lezioni
               </h1>
+              <p className="text-sm text-muted-foreground">
+                Results: {startIndex}-{endIndex} di {totalLessons}
+              </p>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -212,7 +280,49 @@ export default function Home() {
               ) : upcomingLessons.length > 0 ? (
                 <Table>
                   <TableCaption className="dark:text-slate-400">
-                    Lista delle prossime lezioni
+                    <div className="flex justify-between items-center">
+                      <Button
+                        variant="outline"
+                        disabled={currentPage === 0}
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
+                        Precedenti
+                      </Button>
+
+                      {/* Page numbers */}
+                      <div>
+                        {pageNumbers.map((page, index) => (
+                          <Button
+                            key={index}
+                            className="mx-1"
+                            variant={
+                              page === "..."
+                                ? "ghost"
+                                : currentPage + 1 === page
+                                ? "default"
+                                : "outline"
+                            }
+                            disabled={page === "..."}
+                            onClick={() => {
+                              if (typeof page === "number") {
+                                setCurrentPage(page - 1);
+                              }
+                            }}>
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        disabled={
+                          upcomingLessons.length < itemsPerPage || loading
+                        }
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100">
+                        Prossime
+                      </Button>
+                    </div>
                   </TableCaption>
                   <TableHeader>
                     <TableRow className="dark:border-slate-700">
@@ -223,17 +333,21 @@ export default function Home() {
                         Data
                       </TableHead>
                       <TableHead className="dark:text-slate-100">Ora</TableHead>
-                      <TableHead className="text-right dark:text-slate-100"></TableHead>
+                      <TableHead className="dark:text-slate-100">
+                        Ore/lez.
+                      </TableHead>
+                      <TableHead className="text-right dark:text-slate-100">
+                        Azioni
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* Today's lessons */}
                     {todayLessons.length > 0 && (
                       <>
-                        <TableRow>
+                        <TableRow className="">
                           <TableCell
                             colSpan={4}
-                            className="bg-muted dark:bg-slate-800 dark:border-slate-700">
+                            className="dark:bg-slate-800 dark:border-slate-700">
                             <div className="font-semibold py-1 dark:text-slate-100">
                               Oggi
                             </div>
@@ -267,6 +381,9 @@ export default function Home() {
                             <TableCell className="dark:text-slate-100">
                               {formatTime(lesson.time)}
                             </TableCell>
+                            <TableCell className="dark:text-slate-100">
+                              {lesson.amount_hours}
+                            </TableCell>
                             <TableCell
                               className="text-right"
                               onClick={(e) => e.stopPropagation()}>
@@ -295,7 +412,6 @@ export default function Home() {
                                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
-                                Modifica
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -303,7 +419,6 @@ export default function Home() {
                       </>
                     )}
 
-                    {/* Future lessons */}
                     {futureLessons.length > 0 && (
                       <>
                         <TableRow>
@@ -342,6 +457,9 @@ export default function Home() {
                             </TableCell>
                             <TableCell className="dark:text-slate-100">
                               {formatTime(lesson.time)}
+                            </TableCell>
+                            <TableCell className="dark:text-slate-100">
+                              {lesson.amount_hours}
                             </TableCell>
                             <TableCell
                               className="text-right"
@@ -383,40 +501,10 @@ export default function Home() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="w-full">
-            <CardContent className="flex flex-col items-center p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Welcome back, {user.email}
-              </h2>
-              <p className="text-center text-muted-foreground mb-6">
-                Access your lesson history and upcoming schedule
-              </p>
-            </CardContent>
-          </Card>
+          <div>Non sei un amministratore.</div>
         )
       ) : (
-        <Card className="w-full">
-          <CardContent className="flex flex-col items-center p-8 bg-white">
-            <Link
-              className="font-semibold text-foreground hover:text-primary mb-6 transition-colors"
-              to="/home">
-              Scuola Guida Lugano
-            </Link>
-            <p className="text-lg text-center mb-8">
-              Benvenuto nel tuo spazio digitale di Scuola Guida Lugano
-            </p>
-
-            <div className="flex gap-4 items-center flex-col sm:flex-row">
-              <Button asChild variant="outline" size="lg">
-                <Link to="/login">Login</Link>
-              </Button>
-
-              <Button asChild variant="default" size="lg">
-                <Link to="/register">Register</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div>Please log in.</div>
       )}
     </div>
   );
