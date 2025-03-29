@@ -189,7 +189,7 @@ export default function Users() {
         return (
           <Badge
             variant={badgeVariant}
-            className="text-sm dark:border-slate-600">
+            className="text-sm dark:bg-[#003d34c7] dark:border-[#009e86] text-white">
             {daysLeft < 0
               ? `scaduto da ${Math.abs(daysLeft)} giorni`
               : `${daysLeft} giorni`}
@@ -204,7 +204,7 @@ export default function Users() {
         row.original.soccorritori && (
           <Badge
             variant="tertiary"
-            className="text-sm text-white dark:bg-black-800 dark:text-slate-100 dark:border-slate-600">
+            className="text-sm text-white dark:bg-[#003d34c7] dark:border-[#009e86] dark:text-slate-100 ">
             ok
           </Badge>
         ),
@@ -216,7 +216,7 @@ export default function Users() {
         row.original.sensibilizzazione && (
           <Badge
             variant="tertiary"
-            className="text-sm text-white dark:bg-black-800 dark:text-slate-100 dark:border-slate-600">
+            className="text-sm text-white dark:bg-[#003d34f5] dark:border-[#009e86] dark:text-slate-100">
             ok
           </Badge>
         ),
