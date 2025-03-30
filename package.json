@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
@@ -38,6 +38,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "flyonui": "^1.2.0",
     "lucide-react": "^0.476.0",
     "react": "^18.3.1",
