@@ -84,7 +84,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="container pt-6 space-y-6">
+    <div className="container px-[.8rem] pt-8 space-y-2">
       <nav className="flex items-center justify-between p-4 bg-card rounded-lg border shadow-md dark:bg-transparent dark:border-slate-700 dark:shadow-none">
         <div className="flex items-center gap-4">
           <Link
