@@ -5,6 +5,7 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: "/",
   server: {
     watch: {
       usePolling: true,
@@ -18,7 +19,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  build: { // Add this section
-    outDir: "dist", // Ensure output directory is 'dist'
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    assetsDir: "assets",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom']
+        }
+      }
+    }
   },
 });
