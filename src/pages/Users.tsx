@@ -282,17 +282,13 @@ export default function Users() {
   ];
 
   return (
-    <div className="container py-2 space-y-6">
-      <Card className="dark:border-slate-700 dark:bg-black-900">
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={profiles}
-            searchColumn="email"
-            searchPlaceholder="Cerca utenti..."
-          />
-        </CardContent>
-      </Card>
+    <div className="container px-[.8rem] pt-2 space-y-2">
+      <DataTable
+        columns={columns}
+        data={profiles}
+        searchColumn="email"
+        searchPlaceholder="Cerca utenti..."
+      />
     </div>
   );
 }
