@@ -103,12 +103,6 @@ export default function Login() {
                 Registrati
               </Button>
             </Link>
-            <Button
-              onClick={() => {
-                throw new Error("Sentry: This is your first error!");
-              }}>
-              Break the world
-            </Button>
             ;
           </CardFooter>
         </Card>
