@@ -63,6 +63,10 @@ app.post("/create-supabase-project", async (req, res) => {
     }
 
     res.json(await response.json());
+    console.log(
+      "[SUPABASE] 🙌 Project created successfully",
+      await response.json()
+    );
   } catch (error) {
     res.status(500).json({
       error: "Error making request to Supabase",
@@ -88,7 +92,7 @@ app.post("/executeSql", async (req, res) => {
     await pool.query(sql);
     await pool.end();
 
-    res.json({ message: "Schema applied successfully" });
+    res.json({ message: "[SUPABASE DB] 🙌 Schema applied successfully" });
   } catch (error) {
     console.error("Error in executeSql endpoint:", error);
     res
@@ -130,9 +134,56 @@ app.post("/create-vercel-project", async (req, res) => {
         .json({ error: "Error creating Vercel project", details: error });
     }
 
-    res.json(await response.json());
+    const projectData = await response.json();
+    res.json(projectData);
+    console.log("[VERCEL] 🙌 Vercel project created successfully", projectData);
   } catch (error) {
     console.error("Error in create-vercel-project endpoint:", error);
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
+  }
+});
+
+// ! 4 | Deploy the Vercel project after creation
+app.post("/deploy-vercel-repo", async (req, res) => {
+  try {
+    const { projectId, schoolName } = req.body;
+    if (!projectId) throw new Error("Project ID is missing from request body");
+
+    const response = await fetch("https://api.vercel.com/v13/deployments", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer mvIj6EnxXpfiVUQ89oMmZ2lr`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projectId,
+        name: schoolName,
+        target: "production",
+        gitSource: {
+          type: "github",
+          ref: "main",
+          repo: "alatella87/flysupa",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return res
+        .status(500)
+        .json({ error: "Error deploying Vercel project", details: error });
+    }
+
+    const deploymentData = await response.json();
+    res.json(deploymentData);
+    console.log(
+      "[VERCEL] 🙌 Vercel deployment initiated successfully",
+      deploymentData
+    );
+  } catch (error) {
+    console.error("Error in deploy-vercel-repo endpoint:", error);
     res
       .status(500)
       .json({ error: "Internal server error", details: error.message });

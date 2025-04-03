@@ -6,7 +6,7 @@ const CreateSupabaseProject: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     schoolName: "",
-    fullName: ""
+    fullName: "",
   });
 
   const createSupabaseProject = async (
@@ -96,23 +96,28 @@ const CreateSupabaseProject: React.FC = () => {
 
   const createVercelProject = async (schoolName: string) => {
     try {
-      const response = await fetch("http://localhost:3000/create-vercel-project", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          schoolName,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:3000/create-vercel-project",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            schoolName,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
         setOutput(
           (prevOutput) =>
-            prevOutput + "Error creating Vercel project: " + JSON.stringify(error)
+            prevOutput +
+            "Error creating Vercel project: " +
+            JSON.stringify(error)
         );
-        return false;
+        return null;
       }
 
       const result = await response.json();
@@ -122,10 +127,50 @@ const CreateSupabaseProject: React.FC = () => {
           "Vercel project created successfully: " +
           JSON.stringify(result)
       );
-      return true;
+      return result;
     } catch (error) {
       setOutput(
         (prevOutput) => prevOutput + "Error creating Vercel project: " + error
+      );
+      return null;
+    }
+  };
+
+  const deployVercelProject = async (projectId: string, schoolName: string) => {
+    try {
+      const response = await fetch("http://localhost:3000/deploy-vercel-repo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId,
+          schoolName,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        setOutput(
+          (prevOutput) =>
+            prevOutput +
+            "Error deploying Vercel project: " +
+            JSON.stringify(error)
+        );
+        return false;
+      }
+
+      const result = await response.json();
+      setOutput(
+        (prevOutput) =>
+          prevOutput +
+          "Vercel deployment initiated successfully: " +
+          JSON.stringify(result)
+      );
+      return true;
+    } catch (error) {
+      setOutput(
+        (prevOutput) => prevOutput + "Error deploying Vercel project: " + error
       );
       return false;
     }
@@ -133,19 +178,18 @@ const CreateSupabaseProject: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleCreateProjectClick = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setOutput("");
-    
+
     const apiKey = "sbp_56ed72298488efd3471c5c27e3133539cd4e98e0";
-    const projectName = formData.schoolName;
+    const schoolName = formData.schoolName;
     const organization_id = "ajnfgbpatgqromqqitoz";
     const region = "eu-central-1";
     const db_pass = "test30sada090";
@@ -154,7 +198,7 @@ const CreateSupabaseProject: React.FC = () => {
       // Step 1: Create the Supabase project
       const projectData = await createSupabaseProject(
         apiKey,
-        projectName,
+        schoolName,
         organization_id,
         region,
         db_pass
@@ -162,19 +206,38 @@ const CreateSupabaseProject: React.FC = () => {
 
       if (projectData) {
         // Step 2: Execute the SQL schema on the new project
-        const projectId = projectData.id;
-        console.log("✅ Project created successfully! Project ID:", projectId);
-        
+        console.log(
+          "✅ Project created successfully! Project ID:",
+          projectData.id
+        );
+        const supabaseProjectId = projectData.id;
+
         // Execute the SQL schema via the backend
-        const schemaResult = await executeSchemaViaBackend(apiKey, projectId, db_pass);
-        
+        const schemaResult = await executeSchemaViaBackend(
+          apiKey,
+          supabaseProjectId,
+          db_pass
+        );
+
         // Step 3: Create Vercel project after schema execution
         if (schemaResult) {
-          await createVercelProject(formData.schoolName);
+          console.log("✅ SQL Schema execution result:", schemaResult);
+          const vercelProjectData = await createVercelProject(
+            formData.schoolName
+          );
+
+          // Step 4: Deploy Vercel project if it was created successfully
+          if (vercelProjectData && vercelProjectData.id) {
+            console.log(
+              "✅ Vercel project created successfully! Project ID:",
+              vercelProjectData.id
+            );
+            await deployVercelProject(vercelProjectData.id, schoolName);
+          }
         }
       }
     } catch (error) {
-      setOutput("Error: " + error);
+      console.log("Error:", error);
     } finally {
       setLoading(false);
     }
@@ -183,7 +246,7 @@ const CreateSupabaseProject: React.FC = () => {
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow-lg">
       <h1 className="text-2xl font-bold mb-6">Create School Project</h1>
-      
+
       <form onSubmit={handleCreateProjectClick}>
         <div className="mb-4">
           <label className="block text-gray-700 mb-1">Email</label>
@@ -196,7 +259,7 @@ const CreateSupabaseProject: React.FC = () => {
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label className="block text-gray-700 mb-1">School Name</label>
           <input
@@ -204,11 +267,11 @@ const CreateSupabaseProject: React.FC = () => {
             name="schoolName"
             value={formData.schoolName}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 dark:text-black border rounded"
             required
           />
         </div>
-        
+
         <div className="mb-6">
           <label className="block text-gray-700 mb-1">Full Name</label>
           <input
@@ -220,7 +283,7 @@ const CreateSupabaseProject: React.FC = () => {
             required
           />
         </div>
-        
+
         <button
           type="submit"
           className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
@@ -228,11 +291,13 @@ const CreateSupabaseProject: React.FC = () => {
           {loading ? "Creating..." : "Create Project"}
         </button>
       </form>
-      
+
       {output && (
         <div className="mt-6">
           <h2 className="text-lg font-semibold mb-2">Output:</h2>
-          <pre className="bg-gray-100 p-3 rounded overflow-auto max-h-60 text-sm">{output}</pre>
+          <pre className="bg-gray-100 p-3 rounded overflow-auto max-h-60 text-sm">
+            {output}
+          </pre>
         </div>
       )}
     </div>
