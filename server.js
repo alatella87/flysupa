@@ -37,8 +37,8 @@ app.get("/v1/projects", (req, res) => {
   res.json({ message: "Projects endpoint is working" });
 });
 
-// Create Supabase Project
-app.post("/createProject", async (req, res) => {
+// ! 1. Create Supabase Project
+app.post("/create-supabase-project", async (req, res) => {
   try {
     const { apiKey, projectName, organization_id, region, db_pass } = req.body;
     const response = await fetch(createProjectUrl, {
@@ -71,38 +71,12 @@ app.post("/createProject", async (req, res) => {
   }
 });
 
-// Execute SQL on Database
+// ! 2. Execute SQL on newly created Supabase Project to create initial schema
 app.post("/executeSql", async (req, res) => {
   console.log("Received request to execute SQL", req.body);
   try {
     const { projectId, apiKey, db_pass } = req.body;
     if (!projectId) throw new Error("Project ID is missing from request body");
-
-    // const projectUrl = `https://${projectId}.supabase.co`;
-
-    // Fetch anon key
-    // const response = await fetch(
-    //   `https://api.supabase.com/v1/projects/${projectId}/api-keys`,
-    //   {
-    //     method: "GET",
-    //     headers: {
-    //       Authorization: `Bearer ${apiKey}`,
-    //       "Content-Type": "application/json",
-    //     },
-    //   }
-    // );
-
-    // if (!response.ok)
-    //   throw new Error(`Failed to fetch anon key: ${response.statusText}`);
-
-    // const keys = await response.json();
-    // const anonKey = keys.find((item) => item.name === "service_role")?.api_key;
-    // if (!anonKey) throw new Error("Anon key not found");
-
-    // // Initialize Supabase Client
-    // const supabaseClient = createClient(projectUrl, anonKey);
-    // if (!supabaseClient)
-    //   throw new Error("Failed to initialize Supabase client");
 
     // Execute SQL
     const pool = new Pool({
@@ -117,6 +91,48 @@ app.post("/executeSql", async (req, res) => {
     res.json({ message: "Schema applied successfully" });
   } catch (error) {
     console.error("Error in executeSql endpoint:", error);
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
+  }
+});
+
+// ! 3 | Now that we have a Supabase Project, we can create a Vercel Project that would have to
+// ! be linked to the Supabase Project via environment variables.
+
+app.post("/create-vercel-project", async (req, res) => {
+  try {
+    const { schoolName } = req.body;
+    if (!schoolName)
+      throw new Error("School name is missing from request body");
+
+    const response = await fetch("https://api.vercel.com/v9/projects", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer mvIj6EnxXpfiVUQ89oMmZ2lr`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: schoolName,
+        framework: "vite",
+        gitRepository: {
+          type: "github",
+          repo: `alatella87/flysupa`,
+          ref: "dev",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return res
+        .status(500)
+        .json({ error: "Error creating Vercel project", details: error });
+    }
+
+    res.json(await response.json());
+  } catch (error) {
+    console.error("Error in create-vercel-project endpoint:", error);
     res
       .status(500)
       .json({ error: "Internal server error", details: error.message });

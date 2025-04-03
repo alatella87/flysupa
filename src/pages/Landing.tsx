@@ -3,6 +3,11 @@ import React, { useState } from "react";
 const CreateSupabaseProject: React.FC = () => {
   const [output, setOutput] = useState<string>(""); // State for output
   const [loading, setLoading] = useState<boolean>(false); // State for loading status
+  const [formData, setFormData] = useState({
+    email: "",
+    schoolName: "",
+    fullName: ""
+  });
 
   const createSupabaseProject = async (
     apiKey: string,
@@ -14,19 +19,22 @@ const CreateSupabaseProject: React.FC = () => {
     setLoading(true);
     try {
       // Make the request to your own backend
-      const response = await fetch("http://localhost:3000/createProject", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          apiKey,
-          projectName,
-          organization_id,
-          region,
-          db_pass,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:3000/create-supabase-project",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apiKey,
+            projectName,
+            organization_id,
+            region,
+            db_pass,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -39,8 +47,7 @@ const CreateSupabaseProject: React.FC = () => {
       return projectData;
     } catch (error) {
       setOutput("Error: " + error);
-    } finally {
-      setLoading(false);
+      return null;
     }
   };
 
@@ -68,7 +75,7 @@ const CreateSupabaseProject: React.FC = () => {
           (prevOutput) =>
             prevOutput + "Error executing SQL schema: " + JSON.stringify(error)
         );
-        return;
+        return false;
       }
 
       const result = await response.json();
@@ -78,17 +85,67 @@ const CreateSupabaseProject: React.FC = () => {
           "SQL schema executed successfully: " +
           JSON.stringify(result)
       );
+      return true;
     } catch (error) {
       setOutput(
         (prevOutput) => prevOutput + "Error executing SQL schema: " + error
       );
+      return false;
     }
   };
 
-  const handleCreateProjectClick = async () => {
-    //
+  const createVercelProject = async (schoolName: string) => {
+    try {
+      const response = await fetch("http://localhost:3000/create-vercel-project", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          schoolName,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        setOutput(
+          (prevOutput) =>
+            prevOutput + "Error creating Vercel project: " + JSON.stringify(error)
+        );
+        return false;
+      }
+
+      const result = await response.json();
+      setOutput(
+        (prevOutput) =>
+          prevOutput +
+          "Vercel project created successfully: " +
+          JSON.stringify(result)
+      );
+      return true;
+    } catch (error) {
+      setOutput(
+        (prevOutput) => prevOutput + "Error creating Vercel project: " + error
+      );
+      return false;
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+
+  const handleCreateProjectClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setOutput("");
+    
     const apiKey = "sbp_56ed72298488efd3471c5c27e3133539cd4e98e0";
-    const projectName = "buz";
+    const projectName = formData.schoolName;
     const organization_id = "ajnfgbpatgqromqqitoz";
     const region = "eu-central-1";
     const db_pass = "test30sada090";
@@ -105,11 +162,16 @@ const CreateSupabaseProject: React.FC = () => {
 
       if (projectData) {
         // Step 2: Execute the SQL schema on the new project
-        // The project ID is in the response as "id"
         const projectId = projectData.id;
         console.log("✅ Project created successfully! Project ID:", projectId);
+        
         // Execute the SQL schema via the backend
-        await executeSchemaViaBackend(apiKey, projectId, db_pass);
+        const schemaResult = await executeSchemaViaBackend(apiKey, projectId, db_pass);
+        
+        // Step 3: Create Vercel project after schema execution
+        if (schemaResult) {
+          await createVercelProject(formData.schoolName);
+        }
       }
     } catch (error) {
       setOutput("Error: " + error);
@@ -119,15 +181,60 @@ const CreateSupabaseProject: React.FC = () => {
   };
 
   return (
-    <div>
-      <h1>Create Supabase Project</h1>
-      <button
-        id="createProjectBtn"
-        onClick={handleCreateProjectClick}
-        disabled={loading}>
-        {loading ? "Creating..." : "Create Project"}
-      </button>
-      <pre id="output">{output}</pre>
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow-lg">
+      <h1 className="text-2xl font-bold mb-6">Create School Project</h1>
+      
+      <form onSubmit={handleCreateProjectClick}>
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-1">School Name</label>
+          <input
+            type="text"
+            name="schoolName"
+            value={formData.schoolName}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-gray-700 mb-1">Full Name</label>
+          <input
+            type="text"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+        
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
+          disabled={loading}>
+          {loading ? "Creating..." : "Create Project"}
+        </button>
+      </form>
+      
+      {output && (
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold mb-2">Output:</h2>
+          <pre className="bg-gray-100 p-3 rounded overflow-auto max-h-60 text-sm">{output}</pre>
+        </div>
+      )}
     </div>
   );
 };

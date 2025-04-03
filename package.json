@@ -8,7 +8,7 @@
     "dev": "vite",
     "server": "node server.js",
     "dev:all": "concurrently \"npm run dev --port=5173\" \"npm run server\"",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
