@@ -25,6 +25,10 @@ create table "public"."lessons_items" (
     "description" text
 );
 
+pg_dump --schema-only --no-owner --no-privileges --no-comments --file=current_schema.sql postgresql://postgres:qp10wo2397h@db.lctywkbjskclilxtfiux.supabase.co:5432/postgres
+
+postgresql://postgres.lctywkbjskclilxtfiux:qp10wo2397h@aws-0-eu-central-2.pooler.supabase.com:5432postgres
+
 
 alter table "public"."lessons_items" enable row level security;
 

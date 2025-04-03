@@ -6,12 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -35,7 +30,9 @@ export default function RegisterForm() {
           <CardContent>
             <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="email" className="dark:text-white">Mail</Label>
+                <Label htmlFor="email" className="dark:text-white">
+                  Mail
+                </Label>
                 <Input
                   type="email"
                   required
@@ -47,7 +44,9 @@ export default function RegisterForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="dark:text-white">Password</Label>
+                <Label htmlFor="password" className="dark:text-white">
+                  Password
+                </Label>
                 <Input
                   type="password"
                   id="password"
@@ -57,10 +56,9 @@ export default function RegisterForm() {
                   className="dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder:text-gray-400 dark:focus:border-gray-600 dark:focus:ring-gray-600"
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-              >
+              <Button
+                type="submit"
+                className="w-full dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
                 Iscriviti
               </Button>
             </form>
