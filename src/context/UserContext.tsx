@@ -1,12 +1,13 @@
-import {createContext, ReactNode, useEffect, useState} from "react";
-import {supabase} from "../services/supabaseClient.tsx";
+import { createContext, ReactNode, useEffect, useState } from "react";
+import { supabase } from "../services/supabaseClient.tsx";
 import { User, Profile, UserContextType } from "@/types";
 
-export const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(
+  undefined
+);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [nomeUtente, setNomeUtente] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [licenseUrl, setLicenseUrl] = useState<string | null>(null);
@@ -18,15 +19,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [showConfirmAlert, setShowConfirmAlert] = useState<boolean>(false);
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(true);
 
-
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user) {
         setUser({
           id: session.user.id,
-          email: session.user.email || '',
-          total_hours: 0
+          email: session.user.email || "",
+          total_hours: 0,
         });
       } else {
         setUser(null);
@@ -36,12 +38,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     fetchUserData();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
-          email: session.user.email || '',
-          total_hours: 0
+          email: session.user.email || "",
+          total_hours: 0,
         });
       } else {
         setUser(null);
@@ -60,23 +64,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const fetchProfileData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data, error }: any = await supabase
           .from("profiles")
           .select("nome_utente, avatar_url, license_url, admin")
           .eq("id", user.id)
           .single();
 
         if (error) throw error;
-
+        console.log("User Data:", data);
         setNomeUtente(data?.nome_utente || "");
         setIsAdmin(data?.admin || false);
-        setTotalHours(data?.total_hours !== null ? Number(data.total_hours) : null);
+        setTotalHours(
+          data?.total_hours !== null ? Number(data.total_hours) : null
+        );
         setEmail(user?.email || "");
 
         if (data?.avatar_url) {
           await downloadAndSetAvatar(data.avatar_url);
         }
-        
+
         if (data?.license_url) {
           await downloadAndSetLicense(data.license_url);
         }
@@ -118,7 +124,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'license' = 'avatar'): Promise<void> => {
+  const uploadImage = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: "avatar" | "license" = "avatar"
+  ): Promise<void> => {
     try {
       setUploading(true);
 
@@ -129,10 +138,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const file = event.target.files[0];
       const fileExt = file.name.split(".").pop();
       const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
-      
+
       // Determine bucket and field based on type
-      const bucket = type === 'license' ? 'licenses' : 'avatars';
-      const field = type === 'license' ? 'license_url' : 'avatar_url';
+      const bucket = type === "license" ? "licenses" : "avatars";
+      const field = type === "license" ? "license_url" : "avatar_url";
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
@@ -142,7 +151,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       // Update the profile with the appropriate field
       const updates = { [field]: filePath };
-      
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update(updates)
@@ -151,7 +160,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (updateError) throw updateError;
 
       // Download and set the image in state
-      if (type === 'license') {
+      if (type === "license") {
         await downloadAndSetLicense(filePath);
       } else {
         await downloadAndSetAvatar(filePath);
@@ -178,7 +187,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error("Error downloading avatar image:", error);
     }
   };
-  
+
   const downloadAndSetLicense = async (path: string) => {
     try {
       const { data, error } = await supabase.storage
@@ -209,24 +218,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   return (
     <UserContext.Provider
-      value={{
-        user,
-        email,
-        loading,
-        isAdmin,
-        avatarUrl,
-        licenseUrl,
-        totalHours,
-        nomeUtente,
-        setNomeUtente,
-        uploadImage,
-        updateProfile,
-        showConfirmAlert,
-        setShowConfirmAlert,
-        shouldRedirect,
-        setShouldRedirect,
-        downloadAndSetUserAvatar,
-      }}>
+      value={
+        {
+          user,
+          email,
+          loading,
+          isAdmin,
+          avatarUrl,
+          licenseUrl,
+          totalHours,
+          nomeUtente,
+          setNomeUtente,
+          uploadImage,
+          updateProfile,
+          showConfirmAlert,
+          setShowConfirmAlert,
+          shouldRedirect,
+          setShouldRedirect,
+          downloadAndSetUserAvatar,
+        } as any
+      }>
       {children}
     </UserContext.Provider>
   );
