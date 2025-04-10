@@ -5,10 +5,21 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), sentryVitePlugin({
-    org: "northsouth-rt",
-    project: "flysupa-react"
-  })],
+  define: {
+    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+      process.env.VITE_SUPABASE_URL,
+    ),
+    "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(
+      process.env.VITE_SUPABASE_ANON_KEY,
+    ),
+  },
+  plugins: [
+    react(),
+    sentryVitePlugin({
+      org: "northsouth-rt",
+      project: "flysupa-react",
+    }),
+  ],
   base: "/",
   server: {
     watch: {
@@ -31,11 +42,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom']
-        }
-      }
+          vendor: ["react", "react-dom", "react-router-dom"],
+        },
+      },
     },
 
-    sourcemap: true
+    sourcemap: true,
   },
 });
