@@ -34,6 +34,8 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 });
 
+console.log(import.meta.env);
+
 function App() {
   const location = useLocation();
 
