@@ -1,4 +1,3 @@
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -9,10 +8,6 @@ export default defineConfig({
   // environment variables from .env files into import.meta.env
   plugins: [
     react(),
-    sentryVitePlugin({
-      org: "northsouth-rt",
-      project: "flysupa-react",
-    }),
   ],
   base: "/",
   server: {
