@@ -71,7 +71,7 @@ function App() {
           {location.pathname !== "/login" && <Navbar />}
           <div className="p-4 md:p-6">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Login />} />
               <Route path="/home" element={<Home />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/login" element={<Login />} />
