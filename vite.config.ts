@@ -5,6 +5,8 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Remove manual define section - Vite will automatically load VITE_ prefixed
+  // environment variables from .env files into import.meta.env
   plugins: [
     react(),
     sentryVitePlugin({
