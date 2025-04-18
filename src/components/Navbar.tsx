@@ -93,55 +93,53 @@ export default function Navbar() {
             Scuola Guida Lugano
           </Link>
 
-          {isAdmin && (
-            <div className="flex items-center gap-2 ml-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
-                onClick={() => navigate("/home")}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-1">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                Home
-              </Button>
+          <div className="flex items-center gap-2 ml-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+              onClick={() => navigate("/home")}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-1">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Home
+            </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
-                onClick={() => navigate("/users")}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-1">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Utenti
-              </Button>
-            </div>
-          )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="dark:bg-white dark:text-slate-900 dark:border-slate-200 dark:hover:bg-slate-100"
+              onClick={() => navigate("/users")}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-1">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Utenti
+            </Button>
+          </div>
         </div>
 
         {user && (
@@ -224,16 +222,14 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
 
-                  {isAdmin && (
-                    <DropdownMenuItem
-                      asChild
-                      className="dark:focus:bg-slate-800 dark:text-slate-100">
-                      <Link to="/users">
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Lista utenti</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem
+                    asChild
+                    className="dark:focus:bg-slate-800 dark:text-slate-100">
+                    <Link to="/users">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Lista utenti</span>
+                    </Link>
+                  </DropdownMenuItem>
 
                   <DropdownMenuItem
                     asChild
