@@ -58,7 +58,9 @@ export default function Login() {
           <CardContent>
             <form className="space-y-4 md:space-y-6" onSubmit={handleLogin}>
               <div className="space-y-2">
-                <Label htmlFor="email" className="dark:text-white">Mail</Label>
+                <Label htmlFor="email" className="dark:text-white">
+                  Mail
+                </Label>
                 <Input
                   required
                   type="email"
@@ -70,7 +72,9 @@ export default function Login() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="dark:text-white">Password</Label>
+                <Label htmlFor="password" className="dark:text-white">
+                  Password
+                </Label>
                 <Input
                   type="password"
                   id="password"
@@ -80,11 +84,10 @@ export default function Login() {
                   className="dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder:text-gray-400 dark:focus:border-gray-600 dark:focus:ring-gray-600"
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600" 
-                disabled={loading}
-              >
+              <Button
+                type="submit"
+                className="w-full dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                disabled={loading}>
                 {loading ? "Caricamento..." : "Log In"}
               </Button>
             </form>
@@ -94,20 +97,27 @@ export default function Login() {
               Non hai ancora un account?
             </p>
             <Link to="/register">
-              <Button variant="link" className="p-0 font-bold dark:text-white dark:hover:text-gray-300">
+              <Button
+                variant="link"
+                className="p-0 font-bold dark:text-white dark:hover:text-gray-300">
                 Registrati
               </Button>
             </Link>
+            ;
           </CardFooter>
         </Card>
-        
+
         {/* Display error alert when there's an error */}
         {error && (
           <Card className="w-full md:max-w-md mt-4 dark:bg-gray-900 dark:border-gray-800">
-            <Alert variant="destructive" className="dark:bg-red-900 dark:border-red-800">
+            <Alert
+              variant="destructive"
+              className="dark:bg-red-900 dark:border-red-800">
               <Terminal className="h-4 w-4 dark:text-white" />
               <AlertTitle className="dark:text-white">Attenzione</AlertTitle>
-              <AlertDescription className="dark:text-gray-200">{error}</AlertDescription>
+              <AlertDescription className="dark:text-gray-200">
+                {error}
+              </AlertDescription>
             </Alert>
           </Card>
         )}

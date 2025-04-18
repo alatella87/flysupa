@@ -321,37 +321,6 @@ export default function UserEditForm() {
     }
   };
 
-  // Update the createLesson function
-  // const createLesson = async (id: string) => {
-  //   const lessonData = {
-  //     profile_id: id,
-  //     amount_hours: 1,
-  //   };
-  //   try {
-  //     const response = await fetch(
-  //       `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/lessons`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-  //           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-  //         },
-  //         body: JSON.stringify(lessonData),
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to create lesson");
-  //     }
-
-  //     // Refetch lessons
-  //     await fetchProfileLessons(id);
-  //   } catch (err: unknown) {
-  //     setError(err instanceof Error ? err.message : "An error occurred");
-  //   }
-  // };
-
   // Update the deleteLesson function similarly
   const deleteLesson = async (id: string, profileId: string) => {
     try {
