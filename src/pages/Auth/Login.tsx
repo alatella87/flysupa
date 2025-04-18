@@ -92,7 +92,8 @@ export default function Login() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          {/* Currently no user accounts */}
+          {/* <CardFooter className="flex justify-between">
             <p className="text-sm text-muted-foreground dark:text-gray-400">
               Non hai ancora un account?
             </p>
@@ -104,7 +105,7 @@ export default function Login() {
               </Button>
             </Link>
             ;
-          </CardFooter>
+          </CardFooter> */}
         </Card>
 
         {/* Display error alert when there's an error */}
