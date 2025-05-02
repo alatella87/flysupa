@@ -40,7 +40,7 @@ export default function Login() {
     if (error) {
       setError(error.message); // Store error message
     } else {
-      navigate("/account");
+      navigate("/home");
     }
 
     setLoading(false);
