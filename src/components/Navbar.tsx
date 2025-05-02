@@ -89,9 +89,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             className="font-semibold text-foreground dark:text-slate-100 hover:text-primary transition-colors"
-            to="/home">
-            Scuola Guida Lugano
-          </Link>
+            to="/home"></Link>
 
           <div className="flex items-center gap-2 ml-4">
             <Button
